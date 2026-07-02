@@ -1,4 +1,5 @@
 import Game from "../components/Game";
+import ScoreBoard from "../components/scoreBoard";
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/react';
 
 const Home: React.FC = () => {
@@ -11,6 +12,7 @@ const Home: React.FC = () => {
       </IonHeader>
       <IonContent fullscreen>
         <Game />
+        <ScoreBoard />
       </IonContent>
     </IonPage>
   );
