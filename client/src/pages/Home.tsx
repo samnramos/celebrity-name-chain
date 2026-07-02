@@ -1,3 +1,4 @@
+import Game from "../components/Game";
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/react';
 
 const Home: React.FC = () => {
@@ -9,7 +10,7 @@ const Home: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
-        <p>Hello, world!</p>
+        <Game />
       </IonContent>
     </IonPage>
   );
