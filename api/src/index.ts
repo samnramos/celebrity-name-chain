@@ -1,4 +1,4 @@
-//@ts-nocheck
+
 import "dotenv/config";
 import { PrismaClient } from "./generated/prisma/client.js";
 import { PrismaPg } from "@prisma/adapter-pg";
@@ -8,7 +8,7 @@ import express from "express";
 // --------------API CALL HERE------------------
 const res = await fetch('https://api.api-ninjas.com/v1/celebrity', {
   method: 'GET',
-  headers: { 'X-API-Key': process.env.API_SECRET_KEY },})
+  headers: { 'X-Api-Key': process.env.API_SECRET_KEY },})
 
 const data = await res.json()
 console.log(data)
