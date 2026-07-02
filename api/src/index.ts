@@ -1,7 +1,18 @@
+//@ts-nocheck
 import "dotenv/config";
 import { PrismaClient } from "./generated/prisma/client.js";
 import { PrismaPg } from "@prisma/adapter-pg";
 import express from "express";
+
+
+// --------------API CALL HERE------------------
+// const res = await fetch('https://api.parse.bot/scraper/a327a0b6-ab56-4a97-8b96-60ae104eed57/search_profiles?limit=10', {
+//   method: 'GET',
+//   headers: { 'X-API-Key': '$PARSE_API_KEY' },
+// })
+
+// const data = await res.json()
+// console.log(data)
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -31,7 +42,7 @@ const insertGame = async (roomID: string) => {
       data: {
         roomCode: roomID,
         letter: getRandomLetter(),
-        celebrity: getRandomCeleb(),
+        // celebrity: getRandomCeleb(),
       },
     });
   } catch (error) {
@@ -42,13 +53,20 @@ const insertGame = async (roomID: string) => {
 
 const insertAnswer = async (roomID: string, answer: string, username: string) => {
   try {
-    return await prisma.answer.create({
+    return await prisma.answer.create(
+      
+      {
       data: {
         roomCodeID: roomID,
         username: username,
-        entered_answer: answer
+        celebrity: answer
       },
-    });
+    }
+  
+  
+  
+  
+  );
   } catch (error) {
     console.error("Failed to insert answer: ", error);
   }
@@ -56,10 +74,10 @@ const insertAnswer = async (roomID: string, answer: string, username: string) =>
 
 const activeRooms = async (roomID: string, username: string) => {
   try {
-    return await prisma.active_rooms.create({
+    return await prisma.game.create({
       data: {
-        roomCodeID: roomID,
-        username: username,
+        roomCode: roomID,
+        // username: username,
       },
     });
   } catch (error) {
@@ -151,7 +169,6 @@ app.post("/answers", async (req, res) => {
     const letter = games[index].letter;
     if(answer.includes(" ")){
       console.log("answer has spaces");
-      return res.status(400).json({message:"Answer must be only one word"});
     }
     const lower = answer.toUpperCase();
 
