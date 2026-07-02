@@ -10,6 +10,7 @@ datasource db {
 model Game {
   id        Int      @id @default(autoincrement())
   roomCode  String   @unique
+  letter    String
   createdAt DateTime @default(now())
   answers   Answer[]
 }
