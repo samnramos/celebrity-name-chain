@@ -17,7 +17,7 @@ const Game: React.FC = () => {
             <IonCardTitle>Celebrity Celebrity</IonCardTitle>
         </IonCardHeader>
       <IonCardContent>
-        Albert Einstein
+       <p> Albert Einstein</p> 
         <IonItem>
        <IonInput
        label="Room code"
@@ -25,17 +25,20 @@ const Game: React.FC = () => {
             placeholder="Enter room code"
             />
         </IonItem>
+       <IonItem>
         <IonInput
        label="Username"
          labelPlacement="stacked"
             placeholder="Enter username"
             />
-
+        </IonItem>
+        <IonItem>
         <IonInput
        label="Answer"
          labelPlacement="stacked"
             placeholder="Enter celebrity name"
             />
+        </IonItem>
       </IonCardContent>
       <IonButton expand="block">
                 Submit
