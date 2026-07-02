@@ -5,9 +5,10 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import express from "express";
 
 // --------------API CALL HERE------------------
+const apiKey = process.env.API_SECRET_KEY ?? "";
 const res = await fetch('https://api.api-ninjas.com/v1/celebrity', {
   method: 'GET',
-  headers: { 'X-Api-Key': process.env.API_SECRET_KEY },})
+  headers: { 'X-Api-Key': apiKey },})
 
 const data = await res.json()
 console.log(data)
@@ -24,26 +25,25 @@ const getRandomCeleb = (res: any[]) => {
   return res[randomIndex].name;
 };
 
-
 //---- To create a new game record in the games table ----
 const insertGame = async (roomID: string) => {
   try {
     const room = await prisma.game.findUnique({
-      select:{
-        roomCode: true
+      select: {
+        roomCode: true,
       },
       where: {
-        roomCode: roomID
-      }
-    })
-  if(room?.roomCode){
-    throw new Error("Room code already exists")
-  }
+        roomCode: roomID,
+      },
+    });
+    if (room?.roomCode) {
+      throw new Error("Room code already exists");
+    }
     return await prisma.game.create({
       data: {
         roomCode: roomID,
         letter: getRandomLetter(),
-        celebrity: getRandomCeleb(data),
+        // celebrity: getRandomCeleb(data), // for later celebrity API tiered challenge use
       },
     });
   } catch (error) {
@@ -52,8 +52,22 @@ const insertGame = async (roomID: string) => {
   }
 };
 
-const insertAnswer = async (roomID: string, answer: string, username: string) => {
+const insertAnswer = async (
+  roomID: string,
+  answer: string,
+  username: string,
+) => {
   try {
+    const game = await prisma.game.findUnique({
+      where: {
+        roomCode: roomID,
+      },
+    });
+
+    if (!game) {
+      throw new Error("Game not found");
+    }
+
     return await prisma.answer.create({
       data: {
         username: username,
@@ -111,9 +125,10 @@ app.post("/games", async (req, res) => {
     }
 
     const newGame = await insertGame(roomCode);
-    if(!newGame){
+    if (!newGame) {
       return res.status(409).json({
-        message: "This room code already exists"})
+        message: "This room code already exists",
+      });
     }
     return res.status(201).json({
       message: "New Game created successfully!",
@@ -127,37 +142,37 @@ app.post("/games", async (req, res) => {
   }
 });
 
-app.get("/games", async (req,res) => {
- try {
-   const games = await prisma.game.findMany();
-  console.log("Games:", games); 
-  if(!games || games.length === 0){
-    console.log("Games table empty...");
-    return res.status(404).json({message: "No games created yet. Please create a game first..."});
+app.get("/games", async (req, res) => {
+  try {
+    const games = await prisma.game.findMany();
+    console.log("Games:", games);
+    if (!games || games.length === 0) {
+      console.log("Games table empty...");
+      return res.status(404).json({
+        message: "No games created yet. Please create a game first...",
+      });
+    }
 
+    return res
+      .status(200)
+      .json({ message: "Retreiving game data...", games: games });
+  } catch (e) {
+    console.log("Database connection error...");
+    return res.status(500).json({ message: "INternal server error ..." });
   }
-
- return res.status(200).json({message: "Retreiving game data...", games:games});
- }
- catch(e){
-  console.log("Database connection error...");
-  return res.status(500).json({message: "Internal server error ..."});
- }
-
-})
+});
 
 // Answers Route (room code, username, answer)
 app.post("/answers", async (req, res) => {
   try {
-    const {roomCode, username, answer} = req.body;
+    const { roomCode, username, answer } = req.body;
     let index = 0;
     const games = await prisma.game.findMany();
     console.log(games[0].roomCode);
-    for (let i = 0; i < games.length; i ++){
+    for (let i = 0; i < games.length; i++) {
       if (!games[i].roomCode === roomCode) {
         console.log("The game doesn't exist");
-        return res.status(400).json({message:"no game with this room code"});
-  
+        return res.status(400).json({ message: "no game with this room code" });
       }
       if (games[i].roomCode === roomCode) {
         index = i;
@@ -176,18 +191,15 @@ app.post("/answers", async (req, res) => {
       return res.status(400).json({message:`Answer must start with ${secondLetter}`});
     }
     const newAnswer = await insertAnswer(roomCode, answer, username);
-    const active_rooms = await activeRooms(roomCode, username);
-    return res.status(200).json({message:"the answer is created successfully", answer: newAnswer, confirmation: activeRooms})
-
-
+    return res.status(200).json({
+      message: "the answer is created successfully",
+      answer: newAnswer,
+    });
   } catch (error) {
-    console.log (error);
+    console.log(error);
   }
-
 });
 
 app.listen(PORT, () => {
   console.log(`Listening on http://localhost:${PORT}`);
 });
-
-
