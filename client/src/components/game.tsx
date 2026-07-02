@@ -1,9 +1,15 @@
-import { IonCard, IonCardContent } from "@ionic/react";
-import {
+import { 
+    IonCard, 
+    IonCardContent, 
+    IonInput, 
     IonContent,
     IonCardHeader,
-    IonCardTitle
-} from "@ionic/react";
+    IonCardTitle,
+    IonButton,
+    IonItem
+
+ } from "@ionic/react";
+
 const Game: React.FC = () => {
   return (
     <IonCard>
@@ -12,7 +18,28 @@ const Game: React.FC = () => {
         </IonCardHeader>
       <IonCardContent>
         Albert Einstein
+        <IonItem>
+       <IonInput
+       label="Room code"
+         labelPlacement="stacked"
+            placeholder="Enter room code"
+            />
+        </IonItem>
+        <IonInput
+       label="Username"
+         labelPlacement="stacked"
+            placeholder="Enter username"
+            />
+
+        <IonInput
+       label="Answer"
+         labelPlacement="stacked"
+            placeholder="Enter celebrity name"
+            />
       </IonCardContent>
+      <IonButton expand="block">
+                Submit
+        </IonButton>
     </IonCard>
   );
 };
