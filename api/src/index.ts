@@ -6,13 +6,12 @@ import express from "express";
 
 
 // --------------API CALL HERE------------------
-// const res = await fetch('https://api.parse.bot/scraper/a327a0b6-ab56-4a97-8b96-60ae104eed57/search_profiles?limit=10', {
-//   method: 'GET',
-//   headers: { 'X-API-Key': '$PARSE_API_KEY' },
-// })
+const res = await fetch('https://api.api-ninjas.com/v1/celebrity', {
+  method: 'GET',
+  headers: { 'X-API-Key': process.env.API_SECRET_KEY },})
 
-// const data = await res.json()
-// console.log(data)
+const data = await res.json()
+console.log(data)
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -21,7 +20,10 @@ const app = express();
 app.use(express.json());
 const getRandomLetter = () =>
   String.fromCharCode(65 + Math.floor(Math.random() * 26));
-
+const getRandomCeleb = (res: any[]) => {
+  const randomIndex = Math.floor(Math.random() * res.length);
+  return res[randomIndex].name;
+};
 
 
 //---- To create a new game record in the games table ----
@@ -42,7 +44,7 @@ const insertGame = async (roomID: string) => {
       data: {
         roomCode: roomID,
         letter: getRandomLetter(),
-        // celebrity: getRandomCeleb(),
+        celebrity: getRandomCeleb(data),
       },
     });
   } catch (error) {
@@ -53,39 +55,35 @@ const insertGame = async (roomID: string) => {
 
 const insertAnswer = async (roomID: string, answer: string, username: string) => {
   try {
-    return await prisma.answer.create(
-      
-      {
+    return await prisma.answer.create({
       data: {
-        roomCodeID: roomID,
         username: username,
-        celebrity: answer
+        celebrity: answer,
+        roomCodeID: roomID,
+        game: {
+          connect: {
+            roomCode: roomID,
+          },
+        },
       },
-    }
-  
-  
-  
-  
-  );
+    });
   } catch (error) {
     console.error("Failed to insert answer: ", error);
   }
 };
 
-const activeRooms = async (roomID: string, username: string) => {
+const activeRooms = async (roomID: string, username: any) => {
   try {
-    return await prisma.game.create({
-      data: {
-        roomCode: roomID,
-        // username: username,
-      },
+    return await prisma.game.findUnique({
+      where: { roomCode: roomID },
     });
   } catch (error) {
-    console.error("Failed to insert active games: ", error);
+    console.error("Failed to fetch active game: ", error);
+    return null;
   }
 };
 
-              //------ROUTES-------
+//------ROUTES-------
 app.get("/", (req, res) => {
   res.send("Welcome to 'Guess That Celeb!!'👋😊");
 });
@@ -144,7 +142,7 @@ app.get("/games", async (req,res) => {
  }
  catch(e){
   console.log("Database connection error...");
-  return res.status(500).json({message: "INternal server error ..."});
+  return res.status(500).json({message: "Internal server error ..."});
  }
 
 })
@@ -166,15 +164,17 @@ app.post("/answers", async (req, res) => {
         index = i;
         break ; 
     }}
+
     const letter = games[index].letter;
+    const secondLetter: string = letter.split(" ")[1];
     if(answer.includes(" ")){
       console.log("answer has spaces");
     }
     const lower = answer.toUpperCase();
 
-    if (!lower.startsWith(letter)){
+    if (!lower.startsWith(secondLetter)) {
       console.log("answer doesn't start with required letter");
-      return res.status(400).json({message:`Answer must start with ${letter}`});
+      return res.status(400).json({message:`Answer must start with ${secondLetter}`});
     }
     const newAnswer = await insertAnswer(roomCode, answer, username);
     const active_rooms = await activeRooms(roomCode, username);
