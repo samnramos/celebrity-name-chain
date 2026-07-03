@@ -4,7 +4,6 @@ import { PrismaClient } from "./generated/prisma/client.js";
 import { PrismaPg } from "@prisma/adapter-pg";
 import express from "express";
 
-
 // --------------API CALL HERE------------------
 const res = await fetch('https://api.api-ninjas.com/v1/celebrity', {
   method: 'GET',
@@ -186,11 +185,6 @@ app.post("/answers", async (req, res) => {
   }
 
 });
-    
-
-
-
-
 
 app.listen(PORT, () => {
   console.log(`Listening on http://localhost:${PORT}`);

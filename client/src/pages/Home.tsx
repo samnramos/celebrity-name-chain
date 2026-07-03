@@ -1,8 +1,34 @@
 import Game from "../components/Game";
 import ScoreBoard from "../components/scoreBoard";
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/react';
+import {useQuery} from "@tansstack/react-query";
+import { 
+  IonContent, 
+  IonHeader, 
+  IonPage, 
+  IonTitle, 
+  IonToolbar,
+  IonLabel,
+  IonList,
+  IonItem
+} from '@ionic/react';
 
-const Home: React.FC = () => {
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5173';
+
+interface Celebrity {
+  "Room Code": string;
+  Username: string;
+  "Celebrity Name": string;
+}
+
+const Home: React.FC = () =>{
+  const {data, isLoading, error} = useQuery<Celebrity[]> ({
+    queryKey: ["celebrities"],
+    queryFn: () => 
+      fetch(`${API_URL}/`, {cache: 'no-store'}).then((res) => res.json()),
+    refetchInterval: 1500,
+  });
+
+
   return (
     <IonPage>
       <IonHeader>
@@ -10,7 +36,27 @@ const Home: React.FC = () => {
           <IonTitle>Celebrity Name Chain</IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonContent fullscreen>
+      <IonContent fullscreen className = "ion-padding">
+        {isLoading && <p>Loading....</p>}
+        {error && <p> Could not reach the server. </p>}
+        <IonList>
+          {data?.map((m, i) => (
+            <IonItem key = {i}>
+              <IonLabel>
+                <h2>
+                  {m.roomCode}
+                </h2>
+                <p>
+                  {m.username}
+                </p>
+                <h3>
+                  {m.celebrityName}
+                </h3>
+              </IonLabel>
+            </IonItem>
+          ))}
+        </IonList>
+        {data?.length === 0 && <p> No guesses yet. </p>}
         <Game />
         <ScoreBoard />
       </IonContent>

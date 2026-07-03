@@ -11,7 +11,7 @@ import {
 
  } from "@ionic/react";
 
-
+ 
 const Game: React.FC = () => {
   const { register, handleSubmit } = useForm();
   const onSubmit = (data: any) => {
