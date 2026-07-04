@@ -1,6 +1,7 @@
+
 import Game from "../components/Game";
-import ScoreBoard from "../components/scoreBoard";
-import {useQuery} from "@tansstack/react-query";
+import ScoreBoard from "../components/scoreBoard"
+import {useQuery} from "@tanstack/react-query";
 import { 
   IonContent, 
   IonHeader, 
@@ -12,7 +13,9 @@ import {
   IonItem
 } from '@ionic/react';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5173';
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+
+// Defines the structure of the data returned from the API
 
 interface Celebrity {
   "Room Code": string;
@@ -44,13 +47,13 @@ const Home: React.FC = () =>{
             <IonItem key = {i}>
               <IonLabel>
                 <h2>
-                  {m.roomCode}
+                  {m["Room Code"]}
                 </h2>
                 <p>
-                  {m.username}
+                  {m["Username"]}
                 </p>
                 <h3>
-                  {m.celebrityName}
+                  {m["Celebrity Name"]}
                 </h3>
               </IonLabel>
             </IonItem>
