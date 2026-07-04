@@ -1,5 +1,5 @@
 
-import Game from "../components/Game";
+import Game from "../components/game";
 import ScoreBoard from "../components/scoreBoard"
 import {useQuery} from "@tanstack/react-query";
 import { 
