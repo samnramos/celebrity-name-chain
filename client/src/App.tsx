@@ -1,7 +1,19 @@
 import { Redirect, Route } from 'react-router-dom';
-import { IonApp, IonRouterOutlet, setupIonicReact } from '@ionic/react';
+import {
+  IonApp,
+  IonIcon,
+  IonLabel,
+  IonRouterOutlet,
+  IonTabBar,
+  IonTabButton,
+  IonTabs,
+  setupIonicReact
+} from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
-import Home from './pages/Home';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { addCircle, gameController } from 'ionicons/icons';
+import CreateGame from './pages/CreateGame';
+import PlayGame from './pages/PlayGame';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -35,19 +47,38 @@ import './theme/variables.css';
 
 setupIonicReact();
 
+const queryClient = new QueryClient();
+
 const App: React.FC = () => (
-  <IonApp>
-    <IonReactRouter>
-      <IonRouterOutlet>
-        <Route exact path="/home">
-          <Home />
-        </Route>
-        <Route exact path="/">
-          <Redirect to="/home" />
-        </Route>
-      </IonRouterOutlet>
-    </IonReactRouter>
-  </IonApp>
+  <QueryClientProvider client={queryClient}>
+    <IonApp>
+      <IonReactRouter>
+        <IonTabs>
+          <IonRouterOutlet>
+            <Route exact path="/create">
+              <CreateGame />
+            </Route>
+            <Route exact path="/play">
+              <PlayGame />
+            </Route>
+            <Route exact path="/">
+              <Redirect to="/create" />
+            </Route>
+          </IonRouterOutlet>
+          <IonTabBar slot="bottom">
+            <IonTabButton tab="create" href="/create">
+              <IonIcon aria-hidden="true" icon={addCircle} />
+              <IonLabel>Create</IonLabel>
+            </IonTabButton>
+            <IonTabButton tab="play" href="/play">
+              <IonIcon aria-hidden="true" icon={gameController} />
+              <IonLabel>Play</IonLabel>
+            </IonTabButton>
+          </IonTabBar>
+        </IonTabs>
+      </IonReactRouter>
+    </IonApp>
+  </QueryClientProvider>
 );
 
 export default App;

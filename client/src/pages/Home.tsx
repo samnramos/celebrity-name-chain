@@ -1,6 +1,6 @@
 
 import Game from "../components/game";
-import ScoreBoard from "../components/scoreBoard"
+// import ScoreBoard from "../components/scoreBoard"
 import {useQuery} from "@tanstack/react-query";
 import { 
   IonContent, 
@@ -61,7 +61,7 @@ const Home: React.FC = () =>{
         </IonList>
         {data?.length === 0 && <p> No guesses yet. </p>}
         <Game />
-        <ScoreBoard />
+        {/* <ScoreBoard /> */}
       </IonContent>
     </IonPage>
   );

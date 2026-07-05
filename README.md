@@ -34,40 +34,76 @@ nvm use 22
 nvm alias default 22
 ```
 
-## 1. API (backend)
+## Installation
+
+Run these commands from the project root:
 
 ```bash
-cd api
+cd celebrity-name-chain
+corepack enable
 yarn install
-cp .env.example .env      # then edit .env (see below)
-yarn prisma:migrate       # create tables + generate the Prisma client
-yarn dev                  # http://localhost:3000  (GET /health -> { "ok": true })
 ```
 
-**Edit `.env`** and set `DATABASE_URL` to your local PostgreSQL connection
-before running `yarn prisma:migrate`.
-
-More detail (scripts, Prisma 7 workflow) is in [`api/README.md`](api/README.md).
-
-## 2. Client (frontend)
+Copy the API env file:
 
 ```bash
-cd client
-yarn install
-cp .env.example .env      # then edit .env (see below)
-yarn dev                  # open the Ionic app in your browser (or: ionic serve)
+cp api/.env.example api/.env
 ```
 
-**Edit `.env`** and set `VITE_API_URL` to point at your API (defaults to
-`http://localhost:3000`; use your ngrok URL when playing together).
+Edit `api/.env` and set `DATABASE_URL` to your local PostgreSQL database.
+Example:
 
-## 3. Play together
+```text
+DATABASE_URL="postgresql://YOUR_USER@localhost:5432/celebrity_name_chain?schema=public"
+PORT=3000
+```
 
-Expose the API with ngrok and share the public URL; each player sets their
-client's `VITE_API_URL` to it:
+Copy the client env file:
 
 ```bash
-ngrok http 3000
+cp client/.env.example client/.env
 ```
 
-Expose the **API**, never your database directly.
+For local testing, `client/.env` should use:
+
+```text
+VITE_API_URL=http://localhost:3000
+```
+
+Push the Prisma schema to your database:
+
+```bash
+yarn db:push
+```
+
+## Running locally
+
+Start the API and Ionic frontend together from the project root:
+
+```bash
+yarn dev
+```
+
+Open the Ionic app at:
+
+```text
+http://localhost:5173
+```
+
+The API runs at:
+
+```text
+http://localhost:3000
+```
+
+Players should use the Ionic frontend, not the API
+
+## How to play
+
+1. Go to the Create tab.
+2. Create a room with a starting celebrity.
+3. Go to the Play tab.
+4. Click an active game.
+5. Enter a username and an answer.
+6. The next answer must start with the first letter of the previous answer's
+   last name.

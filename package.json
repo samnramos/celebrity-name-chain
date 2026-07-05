@@ -1,0 +1,16 @@
+{
+  "name": "celebrity-name-chain",
+  "private": true,
+  "packageManager": "yarn@4.17.0",
+  "workspaces": [
+    "api",
+    "client"
+  ],
+  "scripts": {
+    "dev": "yarn workspace celebrity-name-chain-api dev & yarn workspace client dev; wait",
+    "build": "yarn workspace celebrity-name-chain-api build && yarn workspace client build",
+    "db:push": "yarn workspace celebrity-name-chain-api db:push",
+    "prisma:generate": "yarn workspace celebrity-name-chain-api prisma:generate",
+    "prisma:studio": "yarn workspace celebrity-name-chain-api prisma:studio"
+  }
+}
