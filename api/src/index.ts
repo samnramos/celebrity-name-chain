@@ -228,6 +228,14 @@ app.post("/answers", async (req, res) => {
       return res.status(400).json({ message: "No game with this room code" });
     }
 
+    const elapsedSeconds = (Date.now() - games.createdAt.getTime()) / 1000;
+    
+    if (elapsedSeconds > game_duration) {
+      return res.status(400).json ({
+        message: "Game has ended. The Scoreboard is now being displayed."
+      });
+    }
+
     const letter = games[index].letter;
     const secondLetter: string = letter;
     if (answer.includes(" ")) {
@@ -276,6 +284,49 @@ app.post("/answers", async (req, res) => {
   } catch (error) {
     console.log(error);
   }
+});
+
+const game_duration = 5 * 60; 
+const scoreboard_duration = 30;
+
+app.get("/games/:roomCode/status", async (req, res) => {
+  const roomCode = req.params.roomCode; 
+  const game = await prisma.game.findUnique ({
+    where: {
+      roomCode,
+    },
+    include: {
+      answers: true,
+    },
+  });
+
+  if (!game) {
+    return res.status(404).json ({
+      message: "Game not found.",
+    });
+  }
+  
+  const elapsedSeconds = (Date.now() - game.createdAt.getTime()) / 1000;
+
+
+  if (elapsedSeconds < game_duration) {
+    return res.json ({
+      status: "Playing",
+      timeRemaining: Math.ceil(game_duration - elapsedSeconds),
+    });
+  }
+
+  if (elapsedSeconds < game_duration + scoreboard_duration) {
+    return res.json ({
+      status: "Scoreboard",
+      timeRemaining: Math.ceil(game_duration + scoreboard_duration - elapsedSeconds),
+      answers: game.answers,
+    });
+  }
+
+  return res.json ({
+    status: "Closed",
+  });
 });
 
 app.listen(PORT, () => {
