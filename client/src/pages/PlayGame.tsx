@@ -252,9 +252,9 @@ const PlayGame: React.FC = () => {
               </IonButton>
             </div>
 
-              <div style={{ flex: 1 }}>
-                <ScoreBoard />
-                </div>
+            <div style={{ flex: 1 }}>
+              <ScoreBoard players={currentGame.players} />
+            </div>
 
           </div>
         )}
