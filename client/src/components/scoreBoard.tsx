@@ -18,7 +18,8 @@ const ScoreBoard: React.FC<ScoreBoardProps> = ({ players }) => {
   return (
     <IonCard
       style={{
-        borderRadius: "12px",
+        margin: "0",
+        borderRadius: "8px",
       }}
     >
       <IonCardHeader>

@@ -1,6 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   IonButton,
+  IonCard,
+  IonCardContent,
   IonContent,
   IonHeader,
   IonInput,
@@ -56,45 +58,67 @@ const CreateGame: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen className="ion-padding">
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <IonItem>
-            <Controller
-              name="roomCode"
-              control={control}
-              render={({ field }) => (
-                <IonInput
-                  label="Room code"
-                  labelPlacement="stacked"
-                  placeholder="STAR01"
-                  value={field.value}
-                  onIonChange={(e) => field.onChange(e.detail.value)}
-                />
+        <div
+          style={{
+            maxWidth: "620px",
+            margin: "0 auto",
+          }}
+        >
+          <IonCard
+            style={{
+              margin: "0",
+              borderRadius: "8px",
+            }}
+          >
+            <IonCardContent>
+              <form onSubmit={handleSubmit(onSubmit)}>
+                <IonItem>
+                  <Controller
+                    name="roomCode"
+                    control={control}
+                    render={({ field }) => (
+                      <IonInput
+                        label="Room code"
+                        labelPlacement="stacked"
+                        placeholder="STAR01"
+                        value={field.value}
+                        onIonChange={(e) => field.onChange(e.detail.value)}
+                      />
+                    )}
+                  />
+                </IonItem>
+
+                <IonItem>
+                  <Controller
+                    name="celebrity"
+                    control={control}
+                    render={({ field }) => (
+                      <IonInput
+                        label="Starting celebrity"
+                        labelPlacement="stacked"
+                        placeholder="Albert Einstein"
+                        value={field.value}
+                        onIonChange={(e) => field.onChange(e.detail.value)}
+                      />
+                    )}
+                  />
+                </IonItem>
+
+                <IonButton
+                  type="submit"
+                  expand="block"
+                  style={{ marginTop: "16px" }}
+                >
+                  Create
+                </IonButton>
+              </form>
+
+              {createGame.data?.message && (
+                <IonText>{createGame.data.message}</IonText>
               )}
-            />
-          </IonItem>
-
-          <IonItem>
-            <Controller
-              name="celebrity"
-              control={control}
-              render={({ field }) => (
-                <IonInput
-                  label="Starting celebrity"
-                  labelPlacement="stacked"
-                  placeholder="Albert Einstein"
-                  value={field.value}
-                  onIonChange={(e) => field.onChange(e.detail.value)}
-                />
-              )}
-            />
-          </IonItem>
-
-          <IonButton type="submit" expand="block">
-            Create
-          </IonButton>
-        </form>
-
-        {createGame.data?.message && <IonText>{createGame.data.message}</IonText>}
+            </IonCardContent>
+          </IonCard>
+        </div>
       </IonContent>
     </IonPage>
   );
