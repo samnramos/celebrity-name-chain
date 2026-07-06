@@ -28,9 +28,47 @@ app.use(express.json());
 const getRandomLetter = () =>
   String.fromCharCode(65 + Math.floor(Math.random() * 26));
 
+// so it will take suffixes 
+
+const suffixes = new Set ([
+  "jr",
+  "jr.",
+  "sr",
+  "sr.",
+  "ii",
+  "iii",
+  "iv",
+  "v",
+]);
+
+const parseCelebrityName = (name: string) => {
+  const parts = name.trim().split(/\s+/);
+
+  if (parts.length === 1) {
+    return {
+      firstName: parts[0],
+      lastName: parts[0],
+      suffix: "",
+    };
+  }
+
+  let suffix = "";
+
+  const lastPart = parts[parts.length - 1].toLowerCase();
+
+  if (suffixes.has(lastPart)) {
+    suffix = parts.pop()!;
+  }
+
+  return {
+    firstName: parts[0],
+    lastName: parts[parts.length - 1],
+    suffix,
+  };
+};
+
 const getLastName = (name: string) => {
-  const parts = name.trim().split(" ");
-  return parts[parts.length - 1];
+  return parseCelebrityName(name).lastName;
 };
 
 const getNextLetter = (name: string) => {
@@ -201,10 +239,10 @@ app.get("/games", async (req, res) => {
         createdAt: "desc",
       },
     });
-    const gamesWithPlayers = games.map((game) => {
+    const gamesWithPlayers = games.map((game: any) => {
       const scores: any = {};
 
-      game.answers.forEach((answer) => {
+      game.answers.forEach((answer: any) => {
         if (answer.username !== "starter") {
           if (!scores[answer.username]) {
             scores[answer.username] = 0;
