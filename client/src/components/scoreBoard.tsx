@@ -1,30 +1,58 @@
 import {
   IonCard,
+  IonCardContent,
   IonCardHeader,
   IonCardTitle,
-  IonCardContent,
 } from "@ionic/react";
 
-type ScoreBoard = {
+type ScoreBoardProps = {
   players: {
     name: string;
     score: number;
   }[];
 };
 
-const ScoreBoard: React.FC<ScoreBoard> = ({ players }) => {
+const ScoreBoard: React.FC<ScoreBoardProps> = ({ players }) => {
+  const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+
   return (
-    <IonCard>
+    <IonCard
+      style={{
+        borderRadius: "12px",
+      }}
+    >
       <IonCardHeader>
-        <IonCardTitle>Scoreboard</IonCardTitle>
+        <IonCardTitle>🏆 Scoreboard</IonCardTitle>
       </IonCardHeader>
 
       <IonCardContent>
-        {players.map((player, index) => (
-          <p key={index}>
-            {player.name}: {player.score} points
-          </p>
-        ))}
+        {sortedPlayers.length === 0 ? (
+          <p>No scores yet.</p>
+        ) : (
+          sortedPlayers.map((player, index) => (
+            <div
+              key={player.name}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "12px 0",
+                borderBottom:
+                  index !== sortedPlayers.length - 1
+                    ? "1px solid #3a3a3a"
+                    : "none",
+              }}
+            >
+              <strong>
+                {index + 1}. {player.name}
+              </strong>
+
+              <span style={{ fontWeight: "bold" }}>
+                {player.score} pts
+              </span>
+            </div>
+          ))
+        )}
       </IonCardContent>
     </IonCard>
   );

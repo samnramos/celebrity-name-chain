@@ -154,13 +154,11 @@ const PlayGame: React.FC = () => {
         )}
 
         {currentGame && (
-          <div
-            style={{
-              display: "flex",
-              gap: "20px",
-              alignItems: "flex-start",
-            }}
-          >
+           <div style={{ 
+            display: "flex", 
+            gap: "20px",
+            alignItems: "flex-start",
+            }}>
             <div style={{ flex: 2 }}>
               <IonCard>
                 <IonCardHeader>
@@ -254,9 +252,10 @@ const PlayGame: React.FC = () => {
               </IonButton>
             </div>
 
-            <div style={{ flex: 1 }}>
-              <ScoreBoard players={currentGame.players} />
-            </div>
+              <div style={{ flex: 1 }}>
+                <ScoreBoard />
+                </div>
+
           </div>
         )}
       </IonContent>
