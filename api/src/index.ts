@@ -244,7 +244,7 @@ app.post("/answers", async (req, res) => {
 
     const existingAnswers = await prisma.answer.findMany ({
       where: {
-        roomCode: roomCode,
+        roomCodeID: roomCode,
     },
   });
   
