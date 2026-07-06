@@ -80,9 +80,12 @@ const PlayGame: React.FC = () => {
   const { data, isLoading, error } = useQuery<GamesResponse>({
     queryKey: ["games"],
     queryFn: () =>
-      fetch(`${API_URL}/games`, { cache: "no-store" }).then((res) =>
-        res.json(),
-      ),
+      fetch(`${API_URL}/games`, {
+        cache: "no-store",
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      }).then((res) => res.json()),
     refetchInterval: 1500,
   });
 
@@ -92,6 +95,7 @@ const PlayGame: React.FC = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
         },
         body: JSON.stringify(data),
       }).then((res) => res.json()),
@@ -125,7 +129,7 @@ const PlayGame: React.FC = () => {
         {isLoading && <p>Loading...</p>}
         {error && <p>Could not reach the server.</p>}
 
-        {!selectedRoomCode && (
+        {!currentGame && (
           <>
             <h2>Active Games</h2>
 
