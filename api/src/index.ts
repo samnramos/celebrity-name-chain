@@ -164,7 +164,7 @@ app.post("/games", async (req, res) => {
       message: "New game created successfully!",
       game: newGame,
     });
-  } catch (error: any) { 
+  } catch (error: any) {
     console.log("User did not provide a req json body...");
     return res.status(500).json({
       message: "Please provide a roomCode in a json body.",
@@ -186,7 +186,31 @@ app.get("/games", async (req, res) => {
         createdAt: "desc",
       },
     });
-    console.log("Games:", games);
+    const gamesWithPlayers = games.map((game) => {
+      const scores: any = {};
+
+      game.answers.forEach((answer) => {
+        if (answer.username !== "starter") {
+          if (!scores[answer.username]) {
+            scores[answer.username] = 0;
+          }
+
+          scores[answer.username] = scores[answer.username] + 2;
+        }
+      });
+
+      const players = Object.keys(scores).map((name) => ({
+        name: name,
+        score: scores[name],
+      }));
+
+      return {
+        ...game,
+        players: players,
+      };
+    });
+
+    console.log("Games:", gamesWithPlayers);
     if (!games || games.length === 0) {
       console.log("Games table empty...");
       return res.status(200).json({
@@ -197,7 +221,7 @@ app.get("/games", async (req, res) => {
 
     return res
       .status(200)
-      .json({ message: "Retrieving game data...", games: games });
+      .json({ message: "Retrieving game data...", games: gamesWithPlayers });
   } catch (e) {
     console.log("Database connection error...");
     return res.status(500).json({ message: "Internal server error ..." });
@@ -228,11 +252,12 @@ app.post("/answers", async (req, res) => {
       return res.status(400).json({ message: "No game with this room code" });
     }
 
-    const elapsedSeconds = (Date.now() - games.createdAt.getTime()) / 1000;
-    
+    const elapsedSeconds =
+      (Date.now() - games[index].createdAt.getTime()) / 1000;
+
     if (elapsedSeconds > game_duration) {
-      return res.status(400).json ({
-        message: "Game has ended. The Scoreboard is now being displayed."
+      return res.status(400).json({
+        message: "Game has ended. The Scoreboard is now being displayed.",
       });
     }
 
@@ -250,20 +275,20 @@ app.post("/answers", async (req, res) => {
         .json({ message: `Answer must start with ${secondLetter}` });
     }
 
-    const existingAnswers = await prisma.answer.findMany ({
+    const existingAnswers = await prisma.answer.findMany({
       where: {
         roomCodeID: roomCode,
-    },
-  });
-  
-  const duplicate = existingAnswers.find(
-    (item: any) => item.celebrity.toLowerCase() === answer.toLowerCase() 
-  );
-  if (duplicate) {
-    return res.status(400).json ({
-    message: "This celebrity already has been used in this room.",
-  });
-}
+      },
+    });
+
+    const duplicate = existingAnswers.find(
+      (item: any) => item.celebrity.toLowerCase() === answer.toLowerCase(),
+    );
+    if (duplicate) {
+      return res.status(400).json({
+        message: "This celebrity already has been used in this room.",
+      });
+    }
 
     const nextLetter = getNextLetter(answer);
     const newAnswer = await insertAnswer(roomCode, answer, username);
@@ -286,12 +311,12 @@ app.post("/answers", async (req, res) => {
   }
 });
 
-const game_duration = 5 * 60; 
+const game_duration = 5 * 60;
 const scoreboard_duration = 30;
 
 app.get("/games/:roomCode/status", async (req, res) => {
-  const roomCode = req.params.roomCode; 
-  const game = await prisma.game.findUnique ({
+  const roomCode = req.params.roomCode;
+  const game = await prisma.game.findUnique({
     where: {
       roomCode,
     },
@@ -301,30 +326,31 @@ app.get("/games/:roomCode/status", async (req, res) => {
   });
 
   if (!game) {
-    return res.status(404).json ({
+    return res.status(404).json({
       message: "Game not found.",
     });
   }
-  
+
   const elapsedSeconds = (Date.now() - game.createdAt.getTime()) / 1000;
 
-
   if (elapsedSeconds < game_duration) {
-    return res.json ({
+    return res.json({
       status: "Playing",
       timeRemaining: Math.ceil(game_duration - elapsedSeconds),
     });
   }
 
   if (elapsedSeconds < game_duration + scoreboard_duration) {
-    return res.json ({
+    return res.json({
       status: "Scoreboard",
-      timeRemaining: Math.ceil(game_duration + scoreboard_duration - elapsedSeconds),
+      timeRemaining: Math.ceil(
+        game_duration + scoreboard_duration - elapsedSeconds,
+      ),
       answers: game.answers,
     });
   }
 
-  return res.json ({
+  return res.json({
     status: "Closed",
   });
 });
