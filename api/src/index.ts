@@ -241,10 +241,10 @@ app.post("/answers", async (req, res) => {
         .status(400)
         .json({ message: `Answer must start with ${secondLetter}` });
     }
-    
+
     const existingAnswers = await prisma.answer.findMany ({
       where: {
-        roomCodeID: roomCode,
+        roomCode: roomCode,
     },
   });
   
