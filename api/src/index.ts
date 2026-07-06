@@ -164,7 +164,7 @@ app.post("/games", async (req, res) => {
       message: "New game created successfully!",
       game: newGame,
     });
-  } catch (error) {
+  } catch (error: any) { 
     console.log("User did not provide a req json body...");
     return res.status(500).json({
       message: "Please provide a roomCode in a json body.",
@@ -241,6 +241,21 @@ app.post("/answers", async (req, res) => {
         .status(400)
         .json({ message: `Answer must start with ${secondLetter}` });
     }
+    
+    const existingAnswers = await prisma.answer.findMany ({
+      where: {
+        roomCodeID: roomCode,
+    },
+  });
+  
+  const duplicate = existingAnswers.find(
+    (item: any) => item.celebrity.toLowerCase() === answer.toLowerCase() 
+  );
+  if (duplicate) {
+    return res.status(400).json ({
+    message: "This celebrity already has been used in this room.",
+  });
+}
 
     const nextLetter = getNextLetter(answer);
     const newAnswer = await insertAnswer(roomCode, answer, username);
