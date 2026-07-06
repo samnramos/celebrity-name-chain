@@ -17,18 +17,19 @@ const ScoreBoard: React.FC = () => {
   return (
     
     
-    <IonCard> 
-        <IonCardHeader>
-            <IonCardTitle>ScoreBoard</IonCardTitle>
-        </IonCardHeader>
-        <IonCardContent>
-            {players.map((player) => (
-                 <p key={player.name}>
-                {player.name}: {player.score} points
-                 </p>
-))}
-        </IonCardContent>
-    </IonCard>
+ <IonCard>
+  <IonCardHeader>
+    <IonCardTitle>Scoreboard</IonCardTitle>
+  </IonCardHeader>
+
+  <IonCardContent>
+    {players.map((player, index) => (
+      <p key={index}>
+        {player.name}: {player.score} points
+      </p>
+    ))}
+  </IonCardContent>
+</IonCard>
   );
 }
 

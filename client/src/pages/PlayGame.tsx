@@ -1,3 +1,4 @@
+import ScoreBoard from "../components/scoreBoard";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
@@ -149,7 +150,12 @@ const PlayGame: React.FC = () => {
         )}
 
         {currentGame && (
-          <>
+           <div style={{ 
+            display: "flex", 
+            gap: "20px",
+            alignItems: "flex-start",
+            }}>
+            <div style={{ flex: 2 }}>
             <IonCard>
               <IonCardHeader>
                 <IonCardTitle>{currentGame.roomCode}</IonCardTitle>
@@ -240,8 +246,13 @@ const PlayGame: React.FC = () => {
             >
               Choose another game
             </IonButton>
+            </div>
 
-          </>
+              <div style={{ flex: 1 }}>
+                <ScoreBoard />
+                </div>
+
+          </div>
         )}
       </IonContent>
     </IonPage>

@@ -9,7 +9,6 @@ import {
   IonTabs,
   setupIonicReact
 } from '@ionic/react';
-import ScoreBoard from "./components/scoreBoard";
 import { IonReactRouter } from '@ionic/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { addCircle, gameController } from 'ionicons/icons';
@@ -61,9 +60,7 @@ const App: React.FC = () => (
             </Route>
             <Route exact path="/play">
               <PlayGame />
-            </Route>
-            <Route exact path="/scoreboard">
-                 <ScoreBoard />
+            
                  </Route>
             <Route exact path="/">
               <Redirect to="/create" />
@@ -79,10 +76,7 @@ const App: React.FC = () => (
               <IonIcon aria-hidden="true" icon={gameController} />
               <IonLabel>Play</IonLabel>
             </IonTabButton>
-            <IonTabButton tab="scoreboard" href="/scoreboard">
-             <IonIcon aria-hidden="true" icon={gameController} />
-               <IonLabel>Scoreboard</IonLabel>
-               </IonTabButton>
+            
           </IonTabBar>
         </IonTabs>
       </IonReactRouter>
