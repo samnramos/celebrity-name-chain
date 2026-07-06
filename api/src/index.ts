@@ -7,6 +7,9 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 const PORT = 3000;
 const app = express();
+const game_duration = 5 * 60;
+const scoreboard_duration = 60;
+
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header(
@@ -174,6 +177,18 @@ app.post("/games", async (req, res) => {
 
 app.get("/games", async (req, res) => {
   try {
+    const deleteDate = new Date(
+      Date.now() - (game_duration + scoreboard_duration) * 1000,
+    );
+
+    await prisma.game.deleteMany({
+      where: {
+        createdAt: {
+          lt: deleteDate,
+        },
+      },
+    });
+
     const games = await prisma.game.findMany({
       include: {
         answers: {
@@ -255,6 +270,18 @@ app.post("/answers", async (req, res) => {
     const elapsedSeconds =
       (Date.now() - games[index].createdAt.getTime()) / 1000;
 
+    if (elapsedSeconds > game_duration + scoreboard_duration) {
+      await prisma.game.delete({
+        where: {
+          roomCode: roomCode,
+        },
+      });
+
+      return res.status(400).json({
+        message: "Game has closed and was deleted.",
+      });
+    }
+
     if (elapsedSeconds > game_duration) {
       return res.status(400).json({
         message: "Game has ended. The Scoreboard is now being displayed.",
@@ -311,9 +338,6 @@ app.post("/answers", async (req, res) => {
 });
 
 
-const game_duration = 5 * 60;
-const scoreboard_duration = 30;
-
 app.get("/games/:roomCode/status", async (req, res) => {
   const roomCode = req.params.roomCode;
   const game = await prisma.game.findUnique({
@@ -349,6 +373,12 @@ app.get("/games/:roomCode/status", async (req, res) => {
       answers: game.answers,
     });
   }
+
+  await prisma.game.delete({
+    where: {
+      roomCode: roomCode,
+    },
+  });
 
   return res.json({
     status: "Closed",
