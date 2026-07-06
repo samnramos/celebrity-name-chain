@@ -292,7 +292,6 @@ app.post("/answers", async (req, res) => {
 
     const nextLetter = getNextLetter(answer);
     const newAnswer = await insertAnswer(roomCode, answer, username);
-
     await prisma.game.update({
       where: {
         roomCode: roomCode,
@@ -310,6 +309,7 @@ app.post("/answers", async (req, res) => {
     console.log(error);
   }
 });
+
 
 const game_duration = 5 * 60;
 const scoreboard_duration = 30;
@@ -353,6 +353,26 @@ app.get("/games/:roomCode/status", async (req, res) => {
   return res.json({
     status: "Closed",
   });
+
+});
+
+app.get("/games/:roomCode/logout", async (req, res) => {
+  const { roomCode } = req.params;
+  try {
+    const game = await prisma.game.delete({
+      where: { roomCode: roomCode },
+    });
+    if (!game) {
+      return res.status(404).json({ message: "Game not found" });
+    }
+    
+    // perform any logout cleanup here if needed
+    return res.status(200).json({ message: "Logged out", game });
+  } catch (error) {
+    console.error("Failed to fetch game: ", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+
 });
 
 app.listen(PORT, () => {
