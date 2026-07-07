@@ -35,10 +35,6 @@ type GameRoom = {
   letter: string;
   createdAt: string;
   answers: AnswerEntry[];
-  players: {
-    name: string;
-    score: number;
-  }[];
 };
 
 type GamesResponse = {
@@ -156,105 +152,113 @@ const PlayGame: React.FC = () => {
         {currentGame && (
            <div style={{ 
             display: "flex", 
-            gap: "20px",
+            gap: "40px",
             alignItems: "flex-start",
             }}>
             <div style={{ flex: 2 }}>
-              <IonCard>
-                <IonCardHeader>
-                  <IonCardTitle>{currentGame.roomCode}</IonCardTitle>
-                </IonCardHeader>
-                <IonCardContent>
+            <IonCard>
+              <IonCardHeader>
+                <IonCardTitle>{currentGame.roomCode}</IonCardTitle>
+              </IonCardHeader>
+              <IonCardContent>
+                <p>
+                  Current Letter:{" "}
+                  <IonText color="primary">
+                    <strong>{currentGame.letter}</strong>
+                  </IonText>
+                </p>
+
+                {recentAnswers.length > 0 && (
                   <p>
-                    Current Letter:{" "}
+                    {recentAnswers.map((answer, index) => (
+                      <span key={answer.id}>
+                        {showNameWithLastInitial(answer.celebrity)}
+                        {index < recentAnswers.length - 1 && " > "}
+                      </span>
+                    ))}{" "}
+                    &gt;{" "}
                     <IonText color="primary">
                       <strong>{currentGame.letter}</strong>
                     </IonText>
                   </p>
+                )}
+              </IonCardContent>
+            </IonCard>
 
-                  {recentAnswers.length > 0 && (
-                    <p>
-                      {recentAnswers.map((answer, index) => (
-                        <span key={answer.id}>
-                          {showNameWithLastInitial(answer.celebrity)}
-                          {index < recentAnswers.length - 1 && " > "}
-                        </span>
-                      ))}{" "}
-                      &gt;{" "}
-                      <IonText color="primary">
-                        <strong>{currentGame.letter}</strong>
-                      </IonText>
-                    </p>
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <IonItem>
+                <Controller
+                  name="roomCode"
+                  control={control}
+                  render={({ field }) => (
+                    <IonInput
+                      label="Room code"
+                      labelPlacement="stacked"
+                      placeholder="TEST01"
+                      value={field.value}
+                      onIonChange={(e) => field.onChange(e.detail.value)}
+                    />
                   )}
-                </IonCardContent>
-              </IonCard>
+                />
+              </IonItem>
 
-              <form onSubmit={handleSubmit(onSubmit)}>
-                <IonItem>
-                  <Controller
-                    name="roomCode"
-                    control={control}
-                    render={({ field }) => (
-                      <IonInput
-                        label="Room code"
-                        labelPlacement="stacked"
-                        placeholder="TEST01"
-                        value={field.value}
-                        onIonChange={(e) => field.onChange(e.detail.value)}
-                      />
-                    )}
-                  />
-                </IonItem>
+              <IonItem>
+                <Controller
+                  name="username"
+                  control={control}
+                  render={({ field }) => (
+                    <IonInput
+                      label="Username"
+                      labelPlacement="stacked"
+                      placeholder="Player name"
+                      value={field.value}
+                      onIonChange={(e) => field.onChange(e.detail.value)}
+                    />
+                  )}
+                />
+              </IonItem>
 
-                <IonItem>
-                  <Controller
-                    name="username"
-                    control={control}
-                    render={({ field }) => (
-                      <IonInput
-                        label="Username"
-                        labelPlacement="stacked"
-                        placeholder="Player name"
-                        value={field.value}
-                        onIonChange={(e) => field.onChange(e.detail.value)}
-                      />
-                    )}
-                  />
-                </IonItem>
+              <IonItem>
+                <Controller
+                  name="answer"
+                  control={control}
+                  render={({ field }) => (
+                    <IonInput
+                      label="Answer"
+                      labelPlacement="stacked"
+                      placeholder="Elvis Presley"
+                      value={field.value}
+                      onIonChange={(e) => field.onChange(e.detail.value)}
+                    />
+                  )}
+                />
+              </IonItem>
 
-                <IonItem>
-                  <Controller
-                    name="answer"
-                    control={control}
-                    render={({ field }) => (
-                      <IonInput
-                        label="Answer"
-                        labelPlacement="stacked"
-                        placeholder="Elvis Presley"
-                        value={field.value}
-                        onIonChange={(e) => field.onChange(e.detail.value)}
-                      />
-                    )}
-                  />
-                </IonItem>
-
-                <IonButton type="submit" expand="block">
-                  Submit
-                </IonButton>
-              </form>
-
-              <IonButton
-                fill="clear"
-                expand="block"
-                onClick={() => setSelectedRoomCode("")}
-              >
-                Choose another game
+              <IonButton type="submit" expand="block">
+                Submit
               </IonButton>
+            </form>
+
+            <IonButton
+              fill="clear"
+              expand="block"
+              onClick={() => setSelectedRoomCode("")}
+            >
+              Choose another game
+            </IonButton>
             </div>
 
-              <div style={{ flex: 1 }}>
-                <ScoreBoard />
-                </div>
+              <div
+                  style={{
+                     flex: 1,
+                     maxWidth: "350px",
+                     position: "sticky",
+                     top: "20px",
+                     alignSelf: "flex-start",
+  }}
+>
+  <ScoreBoard />
+</div>
 
           </div>
         )}
