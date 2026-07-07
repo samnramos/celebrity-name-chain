@@ -7,6 +7,9 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 const PORT = 3000;
 const app = express();
+const game_duration = 5 * 60;
+const scoreboard_duration = 60;
+
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header(
@@ -22,12 +25,46 @@ app.use((req, res, next) => {
   return next();
 });
 app.use(express.json());
+
+const getRoomCode = () => {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
+};
+
 const getRandomLetter = () =>
   String.fromCharCode(65 + Math.floor(Math.random() * 26));
 
+// so it will take suffixes
+
+const suffixes = new Set(["jr", "jr.", "sr", "sr.", "ii", "iii", "iv", "v"]);
+
+const parseCelebrityName = (name: string) => {
+  const parts = name.trim().split(/\s+/);
+
+  if (parts.length === 1) {
+    return {
+      firstName: parts[0],
+      lastName: parts[0],
+      suffix: "",
+    };
+  }
+
+  let suffix = "";
+
+  const lastPart = parts[parts.length - 1].toLowerCase();
+
+  if (suffixes.has(lastPart)) {
+    suffix = parts.pop()!;
+  }
+
+  return {
+    firstName: parts[0],
+    lastName: parts[parts.length - 1],
+    suffix,
+  };
+};
+
 const getLastName = (name: string) => {
-  const parts = name.trim().split(" ");
-  return parts[parts.length - 1];
+  return parseCelebrityName(name).lastName;
 };
 
 const getNextLetter = (name: string) => {
@@ -48,8 +85,9 @@ const getNextLetter = (name: string) => {
 // };
 
 //---- To create a new game record in the games table ----
-const insertGame = async (roomID: string, celebrity?: string) => {
+const insertGame = async (celebrity?: string) => {
   try {
+    const roomID = getRoomCode();
     const room = await prisma.game.findUnique({
       select: {
         roomCode: true,
@@ -133,31 +171,18 @@ app.get("/", (req, res) => {
 
 app.post("/games", async (req, res) => {
   try {
-    const { roomCode, celebrity } = req.body;
-    if (!roomCode || roomCode.trim() === "") {
-      console.log("No roomCode provided...");
+    const { celebrity } = req.body;
+    if (!celebrity || celebrity.trim() === "") {
+      console.log("No celebrity provided...");
       return res.status(400).json({
-        message: "Please enter a room code to start. (i.e. json body)",
-      });
-    }
-    if (typeof roomCode !== "string") {
-      console.log("provided roomCode is not a string...");
-      return res.status(400).json({
-        message:
-          "Please enter a valid room code containing a combination of numbers and characters. (e.g. Test123)",
-      });
-    }
-    if (roomCode.length < 4 || roomCode.length > 6) {
-      console.log("roomCode length is <= 3...");
-      return res.status(400).json({
-        message: "roomCode must be between 4 and 6 characters.",
+        message: "Please enter a starting celebrity.",
       });
     }
 
-    const newGame = await insertGame(roomCode, celebrity);
+    const newGame = await insertGame(celebrity);
     if (!newGame) {
       return res.status(409).json({
-        message: "This room code already exists",
+        message: "Could not create game. Please try again.",
       });
     }
     return res.status(201).json({
@@ -167,13 +192,25 @@ app.post("/games", async (req, res) => {
   } catch (error: any) {
     console.log("User did not provide a req json body...");
     return res.status(500).json({
-      message: "Please provide a roomCode in a json body.",
+      message: "Please provide a starting celebrity in a json body.",
     });
   }
 });
 
 app.get("/games", async (req, res) => {
   try {
+    const deleteDate = new Date(
+      Date.now() - (game_duration + scoreboard_duration) * 1000,
+    );
+
+    await prisma.game.deleteMany({
+      where: {
+        createdAt: {
+          lt: deleteDate,
+        },
+      },
+    });
+
     const games = await prisma.game.findMany({
       include: {
         answers: {
@@ -186,10 +223,10 @@ app.get("/games", async (req, res) => {
         createdAt: "desc",
       },
     });
-    const gamesWithPlayers = games.map((game) => {
+    const gamesWithPlayers = games.map((game: any) => {
       const scores: any = {};
 
-      game.answers.forEach((answer) => {
+      game.answers.forEach((answer: any) => {
         if (answer.username !== "starter") {
           if (!scores[answer.username]) {
             scores[answer.username] = 0;
@@ -255,6 +292,18 @@ app.post("/answers", async (req, res) => {
     const elapsedSeconds =
       (Date.now() - games[index].createdAt.getTime()) / 1000;
 
+    if (elapsedSeconds > game_duration + scoreboard_duration) {
+      await prisma.game.delete({
+        where: {
+          roomCode: roomCode,
+        },
+      });
+
+      return res.status(400).json({
+        message: "Game has closed and was deleted.",
+      });
+    }
+
     if (elapsedSeconds > game_duration) {
       return res.status(400).json({
         message: "Game has ended. The Scoreboard is now being displayed.",
@@ -310,10 +359,6 @@ app.post("/answers", async (req, res) => {
   }
 });
 
-
-const game_duration = 5 * 60;
-const scoreboard_duration = 30;
-
 app.get("/games/:roomCode/status", async (req, res) => {
   const roomCode = req.params.roomCode;
   const game = await prisma.game.findUnique({
@@ -350,10 +395,15 @@ app.get("/games/:roomCode/status", async (req, res) => {
     });
   }
 
+  await prisma.game.delete({
+    where: {
+      roomCode: roomCode,
+    },
+  });
+
   return res.json({
     status: "Closed",
   });
-
 });
 
 app.get("/games/:roomCode/logout", async (req, res) => {
@@ -365,14 +415,13 @@ app.get("/games/:roomCode/logout", async (req, res) => {
     if (!game) {
       return res.status(404).json({ message: "Game not found" });
     }
-    
+
     // perform any logout cleanup here if needed
     return res.status(200).json({ message: "Logged out", game });
   } catch (error) {
     console.error("Failed to fetch game: ", error);
     return res.status(500).json({ message: "Internal server error" });
   }
-
 });
 
 app.listen(PORT, () => {

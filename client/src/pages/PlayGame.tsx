@@ -67,9 +67,13 @@ const showNameWithLastInitial = (name: string) => {
   );
 };
 
+// TODO: Replace DUMMY_PLAYERS with actual players from the current game when the backend is ready to provide that data.
+const DUMMY_PLAYERS: any[] = [];
+
 const PlayGame: React.FC = () => {
   const queryClient = useQueryClient();
   const [selectedRoomCode, setSelectedRoomCode] = useState("");
+  const [answerMessage, setAnswerMessage] = useState("");
   const { control, handleSubmit, resetField, setValue } = useForm<AnswerForm>({
     defaultValues: {
       roomCode: "",
@@ -91,18 +95,25 @@ const PlayGame: React.FC = () => {
   });
 
   const submitAnswer = useMutation({
-    mutationFn: (data: AnswerForm) =>
-      fetch(`${API_URL}/answers`, {
+    mutationFn: async (data: AnswerForm) => {
+      const response = await fetch(`${API_URL}/answers`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "ngrok-skip-browser-warning": "true",
         },
         body: JSON.stringify(data),
-      }).then((res) => res.json()),
-    onSuccess: () => {
+      });
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setAnswerMessage(data.message);
       queryClient.invalidateQueries({ queryKey: ["games"] });
-      resetField("answer");
+
+      if (data.answer) {
+        resetField("answer");
+      }
     },
   });
 
@@ -113,10 +124,15 @@ const PlayGame: React.FC = () => {
   const games = data?.games || [];
   const currentGame = games.find((game) => game.roomCode === selectedRoomCode);
   const recentAnswers = currentGame?.answers.slice(-3) || [];
+  const gameDuration = 5 * 60 * 1000;
+  const gameIsOver = currentGame
+    ? Date.now() - new Date(currentGame.createdAt).getTime() > gameDuration
+    : false;
 
   const chooseGame = (game: GameRoom) => {
     setSelectedRoomCode(game.roomCode);
     setValue("roomCode", game.roomCode);
+    setAnswerMessage("");
   };
 
   return (
@@ -149,42 +165,59 @@ const PlayGame: React.FC = () => {
           </>
         )}
 
-        {currentGame && (
-           <div style={{ 
-            display: "flex", 
-            gap: "40px",
-            alignItems: "flex-start",
-            }}>
-            <div style={{ flex: 2 }}>
-            <IonCard>
-              <IonCardHeader>
-                <IonCardTitle>{currentGame.roomCode}</IonCardTitle>
-              </IonCardHeader>
-              <IonCardContent>
-                <p>
-                  Current Letter:{" "}
-                  <IonText color="primary">
-                    <strong>{currentGame.letter}</strong>
-                  </IonText>
-                </p>
 
-                {recentAnswers.length > 0 && (
+
+
+
+
+        {currentGame && (
+
+          <div
+            style={{
+              display: "flex",
+              gap: "24px",
+              maxWidth: "1200px",
+              margin: "0 auto",
+            }}
+          >
+            <div style={{ flex: 2 }}>
+              <IonCard
+                style={{
+                  margin: "0",
+                  marginBottom: "16px",
+                  borderRadius: "8px",
+                }}
+              >
+                <IonCardHeader>
+                  <IonCardTitle>{currentGame.roomCode}</IonCardTitle>
+                </IonCardHeader>
+                <IonCardContent>
                   <p>
-                    {recentAnswers.map((answer, index) => (
-                      <span key={answer.id}>
-                        {showNameWithLastInitial(answer.celebrity)}
-                        {index < recentAnswers.length - 1 && " > "}
-                      </span>
-                    ))}{" "}
-                    &gt;{" "}
+                    Current Letter:{" "}
                     <IonText color="primary">
                       <strong>{currentGame.letter}</strong>
                     </IonText>
                   </p>
-                )}
-              </IonCardContent>
-            </IonCard>
 
+                  {recentAnswers.length > 0 && (
+                    <p>
+                      {recentAnswers.map((answer, index) => (
+                        <span key={answer.id}>
+                          {showNameWithLastInitial(answer.celebrity)}
+                          {index < recentAnswers.length - 1 && " > "}
+                        </span>
+                      ))}{" "}
+                      &gt;{" "}
+                      <IonText color="primary">
+                        <strong>{currentGame.letter}</strong>
+                      </IonText>
+                    </p>
+                  )}
+                </IonCardContent>
+              </IonCard>
+            </div>
+            </div>
+            )}
             <form onSubmit={handleSubmit(onSubmit)}>
               <IonItem>
                 <Controller
@@ -202,68 +235,116 @@ const PlayGame: React.FC = () => {
                 />
               </IonItem>
 
-              <IonItem>
-                <Controller
-                  name="username"
-                  control={control}
-                  render={({ field }) => (
-                    <IonInput
-                      label="Username"
-                      labelPlacement="stacked"
-                      placeholder="Player name"
-                      value={field.value}
-                      onIonChange={(e) => field.onChange(e.detail.value)}
-                    />
+              <IonCard
+                style={{
+                  margin: "0",
+                  borderRadius: "8px",
+                }}
+              >
+                <IonCardContent>
+                  {gameIsOver && (
+                    <IonText color="danger">
+                      <p>Game over. Answers are closed.</p>
+                    </IonText>
                   )}
-                />
-              </IonItem>
 
-              <IonItem>
-                <Controller
-                  name="answer"
-                  control={control}
-                  render={({ field }) => (
-                    <IonInput
-                      label="Answer"
-                      labelPlacement="stacked"
-                      placeholder="Elvis Presley"
-                      value={field.value}
-                      onIonChange={(e) => field.onChange(e.detail.value)}
-                    />
-                  )}
-                />
-              </IonItem>
+                  {answerMessage && <p>{answerMessage}</p>}
 
-              <IonButton type="submit" expand="block">
-                Submit
+                  <form onSubmit={handleSubmit(onSubmit)}>
+                    <IonItem>
+                      <Controller
+                        name="roomCode"
+                        control={control}
+                        render={({ field }) => (
+                          <IonInput
+                            label="Room code"
+                            labelPlacement="stacked"
+                            placeholder="TEST01"
+                            value={field.value}
+                            onIonChange={(e) => field.onChange(e.detail.value)}
+                          />
+                        )}
+                      />
+                    </IonItem>
+
+                    <IonItem>
+                      <Controller
+                        name="username"
+                        control={control}
+                        render={({ field }) => (
+                          <IonInput
+                            label="Username"
+                            labelPlacement="stacked"
+                            placeholder="Player name"
+                            value={field.value}
+                            onIonChange={(e) => field.onChange(e.detail.value)}
+                          />
+                        )}
+                      />
+                    </IonItem>
+
+                    <IonItem>
+                      <Controller
+                        name="answer"
+                        control={control}
+                        render={({ field }) => (
+                          <IonInput
+                            label="Answer"
+                            labelPlacement="stacked"
+                            placeholder="Elvis Presley"
+                            value={field.value}
+                            disabled={gameIsOver}
+                            onIonChange={(e) => field.onChange(e.detail.value)}
+                          />
+                        )}
+                      />
+                    </IonItem>
+
+                    <IonButton
+                      type="submit"
+                      expand="block"
+                      disabled={gameIsOver}
+                      style={{ marginTop: "16px" }}
+                    >
+                      Submit
+                    </IonButton>
+                  </form>
+                </IonCardContent>
+              </IonCard>
+
+              <IonButton
+                fill="clear"
+                expand="block"
+                onClick={() => setSelectedRoomCode("")}
+                style={{ marginTop: "16px" }}
+              >
+                Choose another game
               </IonButton>
             </form>
 
             <IonButton
               fill="clear"
               expand="block"
-              onClick={() => setSelectedRoomCode("")}
+            onClick={
+              () => setSelectedRoomCode("")
+            }
             >
-              Choose another game
-            </IonButton>
-            </div>
+            Choose another game
+          </IonButton>
 
-              <div
-                  style={{
-                     flex: 1,
-                     maxWidth: "350px",
-                     position: "sticky",
-                     top: "20px",
-                     alignSelf: "flex-start",
-  }}
->
-  <ScoreBoard />
-</div>
-
-          </div>
-        )}
-      </IonContent>
-    </IonPage>
+      <div
+        style={{
+          flex: 1,
+          maxWidth: "350px",
+          position: "sticky",
+          top: "20px",
+          alignSelf: "flex-start",
+        }}
+      >
+        <ScoreBoard players={DUMMY_PLAYERS} />
+      </div>
+    </IonContent>
+    </IonPage >
   );
 };
 

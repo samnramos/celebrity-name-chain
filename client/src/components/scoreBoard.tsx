@@ -15,10 +15,11 @@ type ScoreBoardProps = {
 const ScoreBoard: React.FC<ScoreBoardProps> = ({ players }) => {
   const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
 
-  return (
+    return (
     <IonCard
       style={{
-        borderRadius: "12px",
+        margin: "0",
+        borderRadius: "8px",
       }}
     >
       <IonCardHeader>
