@@ -17,7 +17,6 @@ import { Controller, useForm } from "react-hook-form";
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
 type CreateGameForm = {
-  roomCode: string;
   celebrity: string;
 };
 
@@ -25,7 +24,6 @@ const CreateGame: React.FC = () => {
   const queryClient = useQueryClient();
   const { control, handleSubmit, reset, formState: {errors}} = useForm<CreateGameForm>({
     defaultValues: {
-      roomCode: "",
       celebrity: "",
     },
   });
@@ -95,41 +93,6 @@ const CreateGame: React.FC = () => {
               <form onSubmit={handleSubmit(onSubmit)}>
                 <IonItem>
                   <Controller
-                    name="roomCode"
-                    control={control}
-
-                    //added so that the roomcode only be 6 characters being the limit
-                    //and an error code so that it doesnt exceed past that
-
-                    rules = {{
-                      maxLength: {
-                        value: 6,
-                        message: "Room code cannot exceed 6 characters.",
-                      },
-                    }}
-                    render={({ field }) => (
-                      <IonInput
-                        label="Room code"
-                        labelPlacement="stacked"
-                        placeholder="STAR01"
-                        maxlength = {6}
-                        value={field.value}
-                        onIonChange={(e) => field.onChange(e.detail.value)}
-                      />
-                    )}
-                  />
-                </IonItem>
-
-                {errors.roomCode && (
-                  <IonText color = "danger">
-                    <p>
-                      {errors.roomCode.message}
-                    </p>
-                  </IonText>
-                )}
-
-                <IonItem>
-                  <Controller
                     name="celebrity"
                     control={control}
 
@@ -137,6 +100,7 @@ const CreateGame: React.FC = () => {
                     // and an error code so that it doesnt exceed past that 
 
                     rules = {{
+                      required: "Starting celebrity is required.",
                       maxLength: {
                         value: 32,
                         message: "Celebrity name cannot exceed 32 characters.",
@@ -172,8 +136,10 @@ const CreateGame: React.FC = () => {
                 </IonButton>
               </form>
 
-              {createGame.data?.message && (
-                <IonText>{createGame.data.message}</IonText>
+              {createGame.data?.game && (
+                <IonText>
+                  <p>Room code: {createGame.data.game.roomCode}</p>
+                </IonText>
               )}
             </IonCardContent>
           </IonCard>
