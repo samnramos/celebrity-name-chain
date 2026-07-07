@@ -30,25 +30,46 @@ const CreateGame: React.FC = () => {
     },
   });
 
-  const createGame = useMutation({
-    mutationFn: (data: CreateGameForm) =>
-      fetch(`${API_URL}/games`, {
+  const onSubmit = (data: CreateGameForm) => {
+    console.log("Submitting:", data);
+    createGame.mutate(data);
+  };
+
+  //makes sure the creat button works 
+  
+  const createGame = useMutation ({
+    mutationFn: async (data: CreateGameForm) => {
+      console.log("Sending request", data);
+
+      const response = await fetch(`${API_URL}/games`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "ngrok-skip-browser-warning": "true",
         },
         body: JSON.stringify(data),
-      }).then((res) => res.json()),
+      });
+
+      console.log("Status:", response.status);
+
+      if (!response.ok) {
+        throw new Error(`Request Failed: ${response.status}`);
+    }
+
+      return response.json();
+
+    },
+
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["games"] });
+      queryClient.invalidateQueries ({
+        queryKey: ["games"]
+      });
       reset();
     },
+    onError: (error) => {
+      console.error(error);
+    },
   });
-
-  const onSubmit = (data: CreateGameForm) => {
-    createGame.mutate(data);
-  };
 
   return (
     <IonPage>
