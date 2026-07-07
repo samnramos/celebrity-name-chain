@@ -12,5 +12,8 @@
     "db:push": "yarn workspace celebrity-name-chain-api db:push",
     "prisma:generate": "yarn workspace celebrity-name-chain-api prisma:generate",
     "prisma:studio": "yarn workspace celebrity-name-chain-api prisma:studio"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.2.0"
   }
 }
