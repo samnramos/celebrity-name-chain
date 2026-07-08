@@ -322,15 +322,6 @@ const PlayGame: React.FC = () => {
               </IonButton>
             </form>
 
-            <IonButton
-              fill="clear"
-              expand="block"
-            onClick={
-              () => setSelectedRoomCode("")
-            }
-            >
-            Choose another game
-          </IonButton>
 
       <div
         style={{
