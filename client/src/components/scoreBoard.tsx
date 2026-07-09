@@ -17,45 +17,58 @@ const ScoreBoard: React.FC<ScoreBoardProps> = ({ players }) => {
 
     return (
     <IonCard
+  style={{
+    borderRadius: "12px",
+    boxShadow: "0 4px 12px rgba(0,0,0,.2)",
+  }}
+>
+  <IonCardHeader>
+    <IonCardTitle
       style={{
-        margin: "0",
-        borderRadius: "8px",
+        textAlign: "center",
+        fontSize: "24px",
       }}
     >
-      <IonCardHeader>
-        <IonCardTitle>🏆 Scoreboard</IonCardTitle>
-      </IonCardHeader>
+      🏆 Leaderboard
+    </IonCardTitle>
+  </IonCardHeader>
 
-      <IonCardContent>
-        {sortedPlayers.length === 0 ? (
-          <p>No scores yet.</p>
-        ) : (
-          sortedPlayers.map((player, index) => (
-            <div
-              key={player.name}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "12px 0",
-                borderBottom:
-                  index !== sortedPlayers.length - 1
-                    ? "1px solid #3a3a3a"
-                    : "none",
-              }}
-            >
-              <strong>
-                {index + 1}. {player.name}
-              </strong>
+  <IonCardContent>
+    {sortedPlayers.length === 0 ? (
+      <p style={{ textAlign: "center" }}>
+        Waiting for players...
+      </p>
+    ) : (
+      sortedPlayers.map((player, index) => (
+        <div
+          key={player.name}
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            padding: "12px 0",
+            borderBottom:
+              index !== sortedPlayers.length - 1
+                ? "1px solid #444"
+                : "none",
+          }}
+        >
+          <strong>
+            {index === 0
+              ? "🥇"
+              : index === 1
+              ? "🥈"
+              : index === 2
+              ? "🥉"
+              : `${index + 1}.`}{" "}
+            {player.name}
+          </strong>
 
-              <span style={{ fontWeight: "bold" }}>
-                {player.score} pts
-              </span>
-            </div>
-          ))
-        )}
-      </IonCardContent>
-    </IonCard>
+          <strong>{player.score} pts</strong>
+        </div>
+      ))
+    )}
+  </IonCardContent>
+</IonCard>
   );
 };
 

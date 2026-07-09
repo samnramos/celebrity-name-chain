@@ -198,6 +198,7 @@ app.post("/games", async (req, res) => {
 });
 
 app.get("/games", async (req, res) => {
+  console.log("GET /games was called");
   try {
     const deleteDate = new Date(
       Date.now() - (game_duration + scoreboard_duration) * 1000,
