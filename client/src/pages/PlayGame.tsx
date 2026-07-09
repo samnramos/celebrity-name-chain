@@ -274,7 +274,7 @@ const PlayGame: React.FC = () => {
 
           </div>)} {/* game-layout close */}
 
-        )   {/* currentGame block close */}
+          {/* currentGame block close */}
 
       </IonContent>
     </IonPage>
