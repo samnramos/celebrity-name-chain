@@ -58,18 +58,23 @@ This project is **ESM** (`"type": "module"`), so relative imports need a
 `.js` extension. After running `yarn prisma:migrate`, create `src/db.ts`:
 
 ```ts
-import { PrismaClient } from "./generated/prisma/client.js";
-import { PrismaPg } from "@prisma/adapter-pg";
+ ----Game Start for Insomnia----
+ After running "yarn dev" in the root terminal:
+ 1. To check any active games, use the /games extention in GET.
+ 2. To start a game, use the /games extention in POST and add a celebrity using "celebrity": "<celebrityname>".
+ 3. To play, use the /answers extention and enter your answer as 
+   "roomCode": "<roomCode>"
+   "celebrity": "<celebrity>"
+   "username": "<username>"
+4. To finish and logout of the game, use the /logout extention in GET.
+Extra: To check the status of the current room, use the /games/:roomCode/status extention in GET.
+Room codes are automatically provided once a celebrity name is added.
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 
-export const prisma = new PrismaClient({ adapter });
-```
+----Game Start for Browser----
+After running "yarn dev" in the root terminal:
+ 1. Copy the localhost link into the browser.
+ 2. Type in a celebrity name. The room code should be generated automatically. 
+ 3. Click on the "Play" tab, and your current game should be active. Click on the active game and play. You have 5 minutes to play a round. 
+ 4. Once the 5 minutes are over, the game will automatically close after a certain time. All data related to the game will be lost.
 
-Then use it in your routes:
-
-```ts
-import { prisma } from "./db.js";
-
-const games = await prisma.game.findMany();
-```
