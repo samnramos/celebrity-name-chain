@@ -105,3 +105,27 @@
     top:20px;
 
 }
+
+.game-item{
+    --background:#1f2937;
+    --color:white;
+
+    margin-bottom:15px;
+
+    border-radius:16px;
+
+    overflow:hidden;
+
+    transition:.3s;
+}
+
+.game-item:hover{
+    transform:translateY(-3px);
+    box-shadow:0 10px 20px rgba(0,0,0,.2);
+}
+
+.page-title{
+    font-size:34px;
+    font-weight:800;
+    margin-bottom:20px;
+}

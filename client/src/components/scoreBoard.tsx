@@ -1,3 +1,5 @@
+import "./ScoreBoard.css";
+
 import {
   IonCard,
   IonCardContent,
@@ -16,54 +18,51 @@ const ScoreBoard: React.FC<ScoreBoardProps> = ({ players }) => {
   const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
 
     return (
-    <IonCard
-  style={{
-    borderRadius: "12px",
-    boxShadow: "0 4px 12px rgba(0,0,0,.2)",
-  }}
->
-  <IonCardHeader>
-    <IonCardTitle
-      style={{
-        textAlign: "center",
-        fontSize: "24px",
-      }}
-    >
-      🏆 Leaderboard
-    </IonCardTitle>
-  </IonCardHeader>
+<IonCard className="leaderboard-card">
+
+<IonCardHeader className="leaderboard-header">
+  <IonCardTitle className="leaderboard-title">
+    🏆 Leaderboard
+  </IonCardTitle>
+</IonCardHeader>
 
   <IonCardContent>
     {sortedPlayers.length === 0 ? (
-      <p style={{ textAlign: "center" }}>
-        Waiting for players...
-      </p>
+     <p className="waiting-text">
+           🎮 Waiting for players...
+    </p>
     ) : (
       sortedPlayers.map((player, index) => (
-        <div
-          key={player.name}
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            padding: "12px 0",
-            borderBottom:
-              index !== sortedPlayers.length - 1
-                ? "1px solid #444"
-                : "none",
-          }}
-        >
-          <strong>
-            {index === 0
-              ? "🥇"
-              : index === 1
-              ? "🥈"
-              : index === 2
-              ? "🥉"
-              : `${index + 1}.`}{" "}
-            {player.name}
-          </strong>
+      
+      
+      
+        <div className={`player-row ${
+            index === 0
+                   ? "gold"
+            : index === 1
+                   ? "silver"
+            : index === 2
+                   ? "bronze"
+            : ""
+}`}
+        key={player.name}
+  >
+       <span className="player-name">
+           {index === 0
+            ? "🥇"
+           : index === 1
+          ? "🥈"
+           : index === 2
+           ? "🥉"
+           : `${index + 1}.`}{" "}
+           {player.name}
+            </span>
 
-          <strong>{player.score} pts</strong>
+          <span className="player-score">
+            {player.score} pts
+          
+          
+          </span>
         </div>
       ))
     )}
