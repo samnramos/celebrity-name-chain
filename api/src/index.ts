@@ -5,7 +5,7 @@ import express from "express";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 const app = express();
 const game_duration = 5 * 60;
 const scoreboard_duration = 60;
@@ -268,34 +268,42 @@ app.get("/games", async (req, res) => {
 // Answers Route (room code, username, answer)
 app.post("/answers", async (req, res) => {
   try {
-    const { roomCode, username, answer } = req.body;
-    let index = 0;
-    let gameFound = false;
-    const games = await prisma.game.findMany();
-    if (games.length === 0) {
-      return res.status(400).json({ message: "No games created yet" });
-    }
-    console.log(games[0].roomCode);
-    for (let i = 0; i < games.length; i++) {
-      if (games[i].roomCode === roomCode) {
-        index = i;
-        gameFound = true;
-        break;
-      }
+    const { roomCode, username, answer } = req.body ?? {};
+
+    if (
+      typeof roomCode !== "string" ||
+      typeof username !== "string" ||
+      typeof answer !== "string" ||
+      roomCode.trim() === "" ||
+      username.trim() === "" ||
+      answer.trim() === ""
+    ) {
+      return res.status(400).json({
+        message: "Room code, username, and answer are required.",
+      });
     }
 
-    if (!gameFound) {
+    const cleanRoomCode = roomCode.trim().toUpperCase();
+    const cleanUsername = username.trim();
+    const cleanAnswer = answer.trim();
+
+    const game = await prisma.game.findUnique({
+      where: {
+        roomCode: cleanRoomCode,
+      },
+    });
+
+    if (!game) {
       console.log("The game doesn't exist");
       return res.status(400).json({ message: "No game with this room code" });
     }
 
-    const elapsedSeconds =
-      (Date.now() - games[index].createdAt.getTime()) / 1000;
+    const elapsedSeconds = (Date.now() - game.createdAt.getTime()) / 1000;
 
     if (elapsedSeconds > game_duration + scoreboard_duration) {
       await prisma.game.delete({
         where: {
-          roomCode: roomCode,
+          roomCode: cleanRoomCode,
         },
       });
 
@@ -310,12 +318,12 @@ app.post("/answers", async (req, res) => {
       });
     }
 
-    const letter = games[index].letter;
+    const letter = game.letter;
     const secondLetter: string = letter;
-    if (answer.includes(" ")) {
+    if (cleanAnswer.includes(" ")) {
       console.log("Answer has spaces");
     }
-    const lower = answer.toUpperCase();
+    const lower = cleanAnswer.toUpperCase();
 
     if (!lower.startsWith(secondLetter)) {
       console.log("answer doesn't start with required letter");
@@ -326,12 +334,13 @@ app.post("/answers", async (req, res) => {
 
     const existingAnswers = await prisma.answer.findMany({
       where: {
-        roomCodeID: roomCode,
+        roomCodeID: cleanRoomCode,
       },
     });
 
     const duplicate = existingAnswers.find(
-      (item: any) => item.celebrity.toLowerCase() === answer.toLowerCase(),
+      (item: any) =>
+        item.celebrity.toLowerCase() === cleanAnswer.toLowerCase(),
     );
     if (duplicate) {
       return res.status(400).json({
@@ -339,11 +348,15 @@ app.post("/answers", async (req, res) => {
       });
     }
 
-    const nextLetter = getNextLetter(answer);
-    const newAnswer = await insertAnswer(roomCode, answer, username);
+    const nextLetter = getNextLetter(cleanAnswer);
+    const newAnswer = await insertAnswer(
+      cleanRoomCode,
+      cleanAnswer,
+      cleanUsername,
+    );
     await prisma.game.update({
       where: {
-        roomCode: roomCode,
+        roomCode: cleanRoomCode,
       },
       data: {
         letter: nextLetter,
@@ -355,7 +368,8 @@ app.post("/answers", async (req, res) => {
       nextLetter: nextLetter,
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 
