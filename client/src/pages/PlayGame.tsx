@@ -1,7 +1,6 @@
 import ScoreBoard from "../components/scoreBoard";
-import "./PlayGame.css";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   IonButton,
   IonCard,
@@ -10,6 +9,7 @@ import {
   IonCardTitle,
   IonContent,
   IonHeader,
+  IonIcon,
   IonInput,
   IonItem,
   IonLabel,
@@ -19,6 +19,12 @@ import {
   IonTitle,
   IonToolbar,
 } from "@ionic/react";
+import {
+  alertCircleOutline,
+  arrowBackOutline,
+  gameControllerOutline,
+  timeOutline,
+} from "ionicons/icons";
 import { Controller, useForm } from "react-hook-form";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
@@ -30,18 +36,16 @@ type AnswerEntry = {
   createdAt: string;
 };
 
-type Player = {
-  name: string;
-  score: number;
-};
-
 type GameRoom = {
   id: number;
   roomCode: string;
   letter: string;
   createdAt: string;
   answers: AnswerEntry[];
-  players: Player[];
+  players: {
+    name: string;
+    score: number;
+  }[];
 };
 
 type GamesResponse = {
@@ -74,13 +78,20 @@ const showNameWithLastInitial = (name: string) => {
   );
 };
 
-// TODO: Replace DUMMY_PLAYERS with actual players from the current game when the backend is ready to provide that data.
-
-
 const PlayGame: React.FC = () => {
   const queryClient = useQueryClient();
   const [selectedRoomCode, setSelectedRoomCode] = useState("");
   const [answerMessage, setAnswerMessage] = useState("");
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   const { control, handleSubmit, resetField, setValue } = useForm<AnswerForm>({
     defaultValues: {
       roomCode: "",
@@ -132,9 +143,27 @@ const PlayGame: React.FC = () => {
   const currentGame = games.find((game) => game.roomCode === selectedRoomCode);
   const recentAnswers = currentGame?.answers.slice(-3) || [];
   const gameDuration = 5 * 60 * 1000;
-  const gameIsOver = currentGame
-    ? Date.now() - new Date(currentGame.createdAt).getTime() > gameDuration
-    : false;
+  const scoreboardDuration = 60 * 1000;
+  const totalDuration = gameDuration + scoreboardDuration;
+
+  const elapsedTime = currentGame
+    ? now - new Date(currentGame.createdAt).getTime()
+    : 0;
+
+  const answerTimeRemaining = currentGame
+    ? Math.max(0, gameDuration - elapsedTime)
+    : 0;
+
+  const roomTimeRemaining = currentGame
+    ? Math.max(0, totalDuration - elapsedTime)
+    : 0;
+
+  const gameIsOver = answerTimeRemaining === 0;
+
+  const timerToShow = gameIsOver ? roomTimeRemaining : answerTimeRemaining;
+  const minutes = Math.floor(timerToShow / 60000);
+  const seconds = Math.floor((timerToShow % 60000) / 1000);
+  const formattedTime = `${minutes}:${seconds.toString().padStart(2, "0")}`;
 
   const chooseGame = (game: GameRoom) => {
     setSelectedRoomCode(game.roomCode);
@@ -147,7 +176,6 @@ const PlayGame: React.FC = () => {
       <IonHeader>
         <IonToolbar>
           <IonTitle>Play Game</IonTitle>
-
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen className="ion-padding">
@@ -156,21 +184,13 @@ const PlayGame: React.FC = () => {
 
         {!currentGame && (
           <>
-
-            <h2 className="page-title">
-              🎮 Active Games
+            <h2>
+              <IonIcon icon={gameControllerOutline} /> Active Games
             </h2>
-
 
             <IonList>
               {games.map((game) => (
-                <IonItem
-                  className="game-item"
-                  button
-                  key={game.id}
-                  onClick={() => chooseGame(game)}
-                >
-
+                <IonItem button key={game.id} onClick={() => chooseGame(game)}>
                   <IonLabel>
                     <h2>{game.roomCode}</h2>
                     <p>Required letter: {game.letter}</p>
@@ -183,99 +203,157 @@ const PlayGame: React.FC = () => {
           </>
         )}
 
-
-
-
         {currentGame && (
-          <div className="game-layout">
-
-            {/* Left Side */}
+          <div
+            style={{
+              display: "flex",
+              gap: "24px",
+              maxWidth: "1200px",
+              margin: "0 auto",
+            }}
+          >
             <div style={{ flex: 2 }}>
-              <IonCard className="room-card">
-
+              <IonCard
+                style={{
+                  margin: "0",
+                  marginBottom: "16px",
+                  borderRadius: "8px",
+                }}
+              >
                 <IonCardHeader>
-                  <IonCardTitle className="room-title">
-                    🎮 Room {currentGame.roomCode}
-
+                  <IonCardTitle>
+                    <IonIcon icon={gameControllerOutline} /> {currentGame.roomCode}
                   </IonCardTitle>
                 </IonCardHeader>
-                <div style={{ textAlign: "center" }}>
-                  <p className="letter-title">Current Letter</p>
+                <IonCardContent>
+                  <p>
+                    Current Letter:{" "}
+                    <IonText color="primary">
+                      <strong>{currentGame.letter}</strong>
+                    </IonText>
+                  </p>
 
-                  <div className="letter-circle">
-                    {currentGame.letter}
-                  </div>
-                </div>
+                  <p>
+                    <IonIcon icon={timeOutline} />{" "}
+                    {gameIsOver ? "Room closes in: " : "Time left: "}
+                    <IonText color={gameIsOver ? "danger" : "primary"}>
+                      <strong>{formattedTime}</strong>
+                    </IonText>
+                  </p>
 
-                {recentAnswers.length > 0 && (
-                  <div style={{ marginTop: "25px" }}>
-                    <h3>Recent Answers</h3>
-
-                    {recentAnswers.map((answer) => (
-                      <div className="answer-card" key={answer.id}>
-                        🎤 {answer.celebrity}
-                      </div>
-                    ))}
-                  </div>
-                )}
-
+                  {recentAnswers.length > 0 && (
+                    <p>
+                      {recentAnswers.map((answer, index) => (
+                        <span key={answer.id}>
+                          {showNameWithLastInitial(answer.celebrity)}
+                          {index < recentAnswers.length - 1 && " > "}
+                        </span>
+                      ))}{" "}
+                      &gt;{" "}
+                      <IonText color="primary">
+                        <strong>{currentGame.letter}</strong>
+                      </IonText>
+                    </p>
+                  )}
+                </IonCardContent>
               </IonCard>
 
-              <IonCard className="form-card" >
-
+              <IonCard
+                style={{
+                  margin: "0",
+                  borderRadius: "8px",
+                }}
+              >
                 <IonCardContent>
                   {gameIsOver && (
                     <IonText color="danger">
-                      <p>Game over. Answers are closed.</p>
+                      <p>
+                        <IonIcon icon={alertCircleOutline} /> Game over. Answers
+                        are closed.
+                      </p>
                     </IonText>
                   )}
 
                   {answerMessage && <p>{answerMessage}</p>}
 
                   <form onSubmit={handleSubmit(onSubmit)}>
-
-                    <IonItem className="game-input">
-                      {/* Username */}
+                    <IonItem>
+                      <Controller
+                        name="roomCode"
+                        control={control}
+                        render={({ field }) => (
+                          <IonInput
+                            label="Room code"
+                            labelPlacement="stacked"
+                            placeholder="TEST01"
+                            value={field.value}
+                            onIonChange={(e) => field.onChange(e.detail.value)}
+                          />
+                        )}
+                      />
                     </IonItem>
 
-                    <IonItem className="game-input">
-                      {/* Answer */}
+                    <IonItem>
+                      <Controller
+                        name="username"
+                        control={control}
+                        render={({ field }) => (
+                          <IonInput
+                            label="Username"
+                            labelPlacement="stacked"
+                            placeholder="Player name"
+                            value={field.value}
+                            onIonChange={(e) => field.onChange(e.detail.value)}
+                          />
+                        )}
+                      />
+                    </IonItem>
+
+                    <IonItem>
+                      <Controller
+                        name="answer"
+                        control={control}
+                        render={({ field }) => (
+                          <IonInput
+                            label="Answer"
+                            labelPlacement="stacked"
+                            placeholder="Elvis Presley"
+                            value={field.value}
+                            disabled={gameIsOver}
+                            onIonChange={(e) => field.onChange(e.detail.value)}
+                          />
+                        )}
+                      />
                     </IonItem>
 
                     <IonButton
-                      className="submit-btn"
                       type="submit"
                       expand="block"
-                      size="large"
-                      color="primary"
+                      disabled={gameIsOver}
+                      style={{ marginTop: "16px" }}
                     >
                       Submit
                     </IonButton>
-
                   </form>
-
-                  <IonButton
-                    className="back-btn"
-                    fill="outline"
-                    expand="block"
-                    onClick={() => setSelectedRoomCode("")}
-                  >
-                    Choose another game
-                  </IonButton>
                 </IonCardContent>
               </IonCard>
+
+              <IonButton
+                fill="clear"
+                expand="block"
+                onClick={() => setSelectedRoomCode("")}
+                style={{ marginTop: "16px" }}
+              >
+                <IonIcon icon={arrowBackOutline} slot="start" />
+                Choose another game
+              </IonButton>
             </div>
 
-            {/* Right Side */}
-
-            <div className="leaderboard-panel">
+            <div style={{ flex: 1 }}>
               <ScoreBoard players={currentGame.players} />
             </div>
-
-          </div>)} {/* game-layout close */}
-
-          {/* currentGame block close */}
-
+          </div>
+        )}
       </IonContent>
     </IonPage>
   );

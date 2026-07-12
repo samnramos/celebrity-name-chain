@@ -1,11 +1,11 @@
-import "./ScoreBoard.css";
-
 import {
   IonCard,
   IonCardContent,
   IonCardHeader,
   IonCardTitle,
+  IonIcon,
 } from "@ionic/react";
+import { trophyOutline } from "ionicons/icons";
 
 type ScoreBoardProps = {
   players: {
@@ -17,57 +17,49 @@ type ScoreBoardProps = {
 const ScoreBoard: React.FC<ScoreBoardProps> = ({ players }) => {
   const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
 
-    return (
-<IonCard className="leaderboard-card">
+  return (
+    <IonCard
+      style={{
+        margin: "0",
+        borderRadius: "8px",
+      }}
+    >
+      <IonCardHeader>
+        <IonCardTitle>
+          <IonIcon icon={trophyOutline} /> Scoreboard
+        </IonCardTitle>
+      </IonCardHeader>
 
-<IonCardHeader className="leaderboard-header">
-  <IonCardTitle className="leaderboard-title">
-    🏆 Leaderboard
-  </IonCardTitle>
-</IonCardHeader>
+      <IonCardContent>
+        {sortedPlayers.length === 0 ? (
+          <p>No scores yet.</p>
+        ) : (
+          sortedPlayers.map((player, index) => (
+            <div
+              key={player.name}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "12px 0",
+                borderBottom:
+                  index !== sortedPlayers.length - 1
+                    ? "1px solid #3a3a3a"
+                    : "none",
+              }}
+            >
+              <strong>
+                {index + 1}. {player.name}
+              </strong>
 
-  <IonCardContent>
-    {sortedPlayers.length === 0 ? (
-     <p className="waiting-text">
-           🎮 Waiting for players...
-    </p>
-    ) : (
-      sortedPlayers.map((player, index) => (
-      
-      
-      
-        <div className={`player-row ${
-            index === 0
-                   ? "gold"
-            : index === 1
-                   ? "silver"
-            : index === 2
-                   ? "bronze"
-            : ""
-}`}
-        key={player.name}
-  >
-       <span className="player-name">
-           {index === 0
-            ? "🥇"
-           : index === 1
-          ? "🥈"
-           : index === 2
-           ? "🥉"
-           : `${index + 1}.`}{" "}
-           {player.name}
-            </span>
-
-          <span className="player-score">
-            {player.score} pts
-          
-          
-          </span>
-        </div>
-      ))
-    )}
-  </IonCardContent>
-</IonCard>
+              <span style={{ fontWeight: "bold" }}>
+                {player.score} pts
+              </span>
+            </div>
+          ))
+        )}
+      </IonCardContent>
+    </IonCard>
   );
 };
 
