@@ -33,6 +33,9 @@ const getRoomCode = () => {
 const getRandomLetter = () =>
   String.fromCharCode(65 + Math.floor(Math.random() * 26));
 
+const normalizeValue = (value: string) =>
+  value.trim().replace(/\s+/g, " ").toLowerCase();
+
 // so it will take suffixes
 
 const suffixes = new Set(["jr", "jr.", "sr", "sr.", "ii", "iii", "iv", "v"]);
@@ -125,32 +128,28 @@ const insertAnswer = async (
   answer: string,
   username: string,
 ) => {
-  try {
-    const game = await prisma.game.findUnique({
-      where: {
-        roomCode: roomID,
-      },
-    });
+  const game = await prisma.game.findUnique({
+    where: {
+      roomCode: roomID,
+    },
+  });
 
-    if (!game) {
-      throw new Error("Game not found");
-    }
+  if (!game) {
+    throw new Error("Game not found");
+  }
 
-    return await prisma.answer.create({
-      data: {
-        username: username,
-        celebrity: answer,
-        roomCodeID: roomID,
-        game: {
-          connect: {
-            roomCode: roomID,
-          },
+  return await prisma.answer.create({
+    data: {
+      username: username,
+      celebrity: answer,
+      roomCodeID: roomID,
+      game: {
+        connect: {
+          roomCode: roomID,
         },
       },
-    });
-  } catch (error) {
-    console.error("Failed to insert answer: ", error);
-  }
+    },
+  });
 };
 
 const activeRooms = async (roomID: string, username: any) => {
@@ -291,6 +290,13 @@ app.post("/answers", async (req, res) => {
       where: {
         roomCode: cleanRoomCode,
       },
+      include: {
+        answers: {
+          orderBy: {
+            createdAt: "asc",
+          },
+        },
+      },
     });
 
     if (!game) {
@@ -332,15 +338,20 @@ app.post("/answers", async (req, res) => {
         .json({ message: `Answer must start with ${secondLetter}` });
     }
 
-    const existingAnswers = await prisma.answer.findMany({
-      where: {
-        roomCodeID: cleanRoomCode,
-      },
-    });
+    const lastAnswer = game.answers[game.answers.length - 1];
 
-    const duplicate = existingAnswers.find(
-      (item: any) =>
-        item.celebrity.toLowerCase() === cleanAnswer.toLowerCase(),
+    if (
+      lastAnswer &&
+      lastAnswer.username !== "starter" &&
+      normalizeValue(lastAnswer.username) === normalizeValue(cleanUsername)
+    ) {
+      return res.status(409).json({
+        message: "You answered most recently. Wait for another player.",
+      });
+    }
+
+    const duplicate = game.answers.find(
+      (item) => normalizeValue(item.celebrity) === normalizeValue(cleanAnswer),
     );
     if (duplicate) {
       return res.status(400).json({
