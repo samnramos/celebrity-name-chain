@@ -82,6 +82,9 @@ const PlayGame: React.FC = () => {
   const queryClient = useQueryClient();
   const [selectedRoomCode, setSelectedRoomCode] = useState("");
   const [answerMessage, setAnswerMessage] = useState("");
+  const [roomCodeInput, setRoomCodeInput] = useState("");
+  const [usernameInput, setUsernameInput] = useState("");
+  const [answerInput, setAnswerInput] = useState("");
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -130,6 +133,7 @@ const PlayGame: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["games"] });
 
       if (data.answer) {
+        setAnswerInput("");
         resetField("answer");
       }
     },
@@ -167,6 +171,7 @@ const PlayGame: React.FC = () => {
 
   const chooseGame = (game: GameRoom) => {
     setSelectedRoomCode(game.roomCode);
+    setRoomCodeInput(game.roomCode);
     setValue("roomCode", game.roomCode);
     setAnswerMessage("");
   };
@@ -286,8 +291,12 @@ const PlayGame: React.FC = () => {
                             label="Room code"
                             labelPlacement="stacked"
                             placeholder="TEST01"
-                            value={field.value}
-                            onIonChange={(e) => field.onChange(e.detail.value)}
+                            value={roomCodeInput}
+                            onIonInput={(e) => {
+                              const value = e.detail.value ?? "";
+                              setRoomCodeInput(value);
+                              field.onChange(value);
+                            }}
                           />
                         )}
                       />
@@ -302,8 +311,12 @@ const PlayGame: React.FC = () => {
                             label="Username"
                             labelPlacement="stacked"
                             placeholder="Player name"
-                            value={field.value}
-                            onIonChange={(e) => field.onChange(e.detail.value)}
+                            value={usernameInput}
+                            onIonInput={(e) => {
+                              const value = e.detail.value ?? "";
+                              setUsernameInput(value);
+                              field.onChange(value);
+                            }}
                           />
                         )}
                       />
@@ -318,9 +331,13 @@ const PlayGame: React.FC = () => {
                             label="Answer"
                             labelPlacement="stacked"
                             placeholder="Elvis Presley"
-                            value={field.value}
+                            value={answerInput}
                             disabled={gameIsOver}
-                            onIonChange={(e) => field.onChange(e.detail.value)}
+                            onIonInput={(e) => {
+                              const value = e.detail.value ?? "";
+                              setAnswerInput(value);
+                              field.onChange(value);
+                            }}
                           />
                         )}
                       />

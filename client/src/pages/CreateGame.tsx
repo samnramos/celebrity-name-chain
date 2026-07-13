@@ -110,10 +110,10 @@ const CreateGame: React.FC = () => {
                       <IonInput
                         label="Starting celebrity"
                         labelPlacement="stacked"
-                        placeholder="Albert Einstein"
+                        placeholder="Zendaya"
                         maxlength = {32}
                         value={field.value}
-                        onIonChange={(e) => field.onChange(e.detail.value)}
+                        onIonInput={(e) => field.onChange(e.detail.value)}
                       />
                     )}
                   />

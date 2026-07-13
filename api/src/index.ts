@@ -74,18 +74,28 @@ const getNextLetter = (name: string) => {
   return getLastName(name).charAt(0).toUpperCase();
 };
 
-// Celebrity API scaffold for later:
-// TVMaze People Search to check if an answer is real.
-// No API key needed.
-// API docs: https://www.tvmaze.com/api#people-search
-//
-// const isRealCelebrity = async (name: string) => {
-//   const response = await fetch(
-//     `https://api.tvmaze.com/search/people?q=${encodeURIComponent(name)}`,
-//   );
-//   const celebrities = await response.json();
-//   return celebrities.length > 0;
-// };
+type CelebritySearchResult = {
+  person?: {
+    name?: string;
+  };
+};
+
+const isRealCelebrity = async (name: string) => {
+  try {
+    const response = await fetch(
+      `https://api.tvmaze.com/search/people?q=${encodeURIComponent(name)}`,
+    );
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const celebrities = (await response.json()) as CelebritySearchResult[];
+    return celebrities.some((celebrity) => celebrity.person?.name);
+  } catch {
+    return false;
+  }
+};
 
 //---- To create a new game record in the games table ----
 const insertGame = async (celebrity?: string) => {
@@ -170,15 +180,24 @@ app.get("/", (req, res) => {
 
 app.post("/games", async (req, res) => {
   try {
-    const { celebrity } = req.body;
-    if (!celebrity || celebrity.trim() === "") {
+    const { celebrity } = req.body ?? {};
+    if (typeof celebrity !== "string" || celebrity.trim() === "") {
       console.log("No celebrity provided...");
       return res.status(400).json({
         message: "Please enter a starting celebrity.",
       });
     }
 
-    const newGame = await insertGame(celebrity);
+    const cleanCelebrity = celebrity.trim();
+    const realCelebrity = await isRealCelebrity(cleanCelebrity);
+
+    if (!realCelebrity) {
+      return res.status(400).json({
+        message: "Please enter a real celebrity name.",
+      });
+    }
+
+    const newGame = await insertGame(cleanCelebrity);
     if (!newGame) {
       return res.status(409).json({
         message: "Could not create game. Please try again.",
@@ -356,6 +375,14 @@ app.post("/answers", async (req, res) => {
     if (duplicate) {
       return res.status(400).json({
         message: "This celebrity already has been used in this room.",
+      });
+    }
+
+    const realCelebrity = await isRealCelebrity(cleanAnswer);
+
+    if (!realCelebrity) {
+      return res.status(400).json({
+        message: "Please enter a real celebrity name.",
       });
     }
 
