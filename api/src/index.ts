@@ -99,38 +99,33 @@ const isRealCelebrity = async (name: string) => {
 
 //---- To create a new game record in the games table ----
 const insertGame = async (celebrity?: string) => {
-  try {
-    const roomID = getRoomCode();
-    const room = await prisma.game.findUnique({
-      select: {
-        roomCode: true,
-      },
-      where: {
-        roomCode: roomID,
-      },
-    });
-    if (room?.roomCode) {
-      throw new Error("Room code already exists");
-    }
-    return await prisma.game.create({
-      data: {
-        roomCode: roomID,
-        letter: celebrity ? getNextLetter(celebrity) : getRandomLetter(),
-        answers: celebrity
-          ? {
-              create: {
-                roomCodeID: roomID,
-                username: "starter",
-                celebrity: celebrity,
-              },
-            }
-          : undefined,
-      },
-    });
-  } catch (error) {
-    console.error("Failed to insert game: ", error);
-    return null;
+  const roomID = getRoomCode();
+  const room = await prisma.game.findUnique({
+    select: {
+      roomCode: true,
+    },
+    where: {
+      roomCode: roomID,
+    },
+  });
+  if (room?.roomCode) {
+    throw new Error("Room code already exists");
   }
+  return prisma.game.create({
+    data: {
+      roomCode: roomID,
+      letter: celebrity ? getNextLetter(celebrity) : getRandomLetter(),
+      answers: celebrity
+        ? {
+            create: {
+              roomCodeID: roomID,
+              username: "starter",
+              celebrity: celebrity,
+            },
+          }
+        : undefined,
+    },
+  });
 };
 
 const insertAnswer = async (
@@ -198,19 +193,15 @@ app.post("/games", async (req, res) => {
     }
 
     const newGame = await insertGame(cleanCelebrity);
-    if (!newGame) {
-      return res.status(409).json({
-        message: "Could not create game. Please try again.",
-      });
-    }
     return res.status(201).json({
       message: "New game created successfully!",
       game: newGame,
     });
-  } catch (error: any) {
-    console.log("User did not provide a req json body...");
+  } catch (error) {
+    console.error("Failed to create game:", error);
     return res.status(500).json({
-      message: "Please provide a starting celebrity in a json body.",
+      message:
+        "Server could not access the database. Check DATABASE_URL and run yarn db:push.",
     });
   }
 });
@@ -277,9 +268,12 @@ app.get("/games", async (req, res) => {
     return res
       .status(200)
       .json({ message: "Retrieving game data...", games: gamesWithPlayers });
-  } catch (e) {
-    console.log("Database connection error...");
-    return res.status(500).json({ message: "Internal server error ..." });
+  } catch (error) {
+    console.error("Failed to retrieve games:", error);
+    return res.status(500).json({
+      message:
+        "Server could not access the database. Check DATABASE_URL and run yarn db:push.",
+    });
   }
 });
 

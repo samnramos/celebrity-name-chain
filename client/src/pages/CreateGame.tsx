@@ -20,6 +20,13 @@ type CreateGameForm = {
   celebrity: string;
 };
 
+type CreateGameResponse = {
+  message?: string;
+  game?: {
+    roomCode: string;
+  };
+};
+
 const CreateGame: React.FC = () => {
   const queryClient = useQueryClient();
   const { control, handleSubmit, reset, formState: {errors}} = useForm<CreateGameForm>({
@@ -29,16 +36,11 @@ const CreateGame: React.FC = () => {
   });
 
   const onSubmit = (data: CreateGameForm) => {
-    console.log("Submitting:", data);
     createGame.mutate(data);
   };
 
-  //makes sure the creat button works 
-  
   const createGame = useMutation ({
-    mutationFn: async (data: CreateGameForm) => {
-      console.log("Sending request", data);
-
+    mutationFn: async (data: CreateGameForm): Promise<CreateGameResponse> => {
       const response = await fetch(`${API_URL}/games`, {
         method: "POST",
         headers: {
@@ -48,14 +50,15 @@ const CreateGame: React.FC = () => {
         body: JSON.stringify(data),
       });
 
-      console.log("Status:", response.status);
+      const result = await response.json().catch(() => ({})) as CreateGameResponse;
 
       if (!response.ok) {
-        throw new Error(`Request Failed: ${response.status}`);
-    }
+        throw new Error(
+          result.message ?? `Could not create game (${response.status}).`,
+        );
+      }
 
-      return response.json();
-
+      return result;
     },
 
     onSuccess: () => {
@@ -63,9 +66,6 @@ const CreateGame: React.FC = () => {
         queryKey: ["games"]
       });
       reset();
-    },
-    onError: (error) => {
-      console.error(error);
     },
   });
 
@@ -130,11 +130,18 @@ const CreateGame: React.FC = () => {
                 <IonButton
                   type="submit"
                   expand="block"
+                  disabled={createGame.isPending}
                   style={{ marginTop: "16px" }}
                 >
-                  Create
+                  {createGame.isPending ? "Creating..." : "Create"}
                 </IonButton>
               </form>
+
+              {createGame.isError && (
+                <IonText color="danger">
+                  <p role="alert">{createGame.error.message}</p>
+                </IonText>
+              )}
 
               {createGame.data?.game && (
                 <IonText>

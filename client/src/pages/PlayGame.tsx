@@ -105,13 +105,23 @@ const PlayGame: React.FC = () => {
 
   const { data, isLoading, error } = useQuery<GamesResponse>({
     queryKey: ["games"],
-    queryFn: () =>
-      fetch(`${API_URL}/games`, {
+    queryFn: async () => {
+      const response = await fetch(`${API_URL}/games`, {
         cache: "no-store",
         headers: {
           "ngrok-skip-browser-warning": "true",
         },
-      }).then((res) => res.json()),
+      });
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          result.message ?? `Could not load games (${response.status}).`,
+        );
+      }
+
+      return result as GamesResponse;
+    },
     refetchInterval: 1500,
   });
 
@@ -185,7 +195,15 @@ const PlayGame: React.FC = () => {
       </IonHeader>
       <IonContent fullscreen className="ion-padding">
         {isLoading && <p>Loading...</p>}
-        {error && <p>Could not reach the server.</p>}
+        {error && (
+          <IonText color="danger">
+            <p role="alert">
+              {error instanceof Error
+                ? error.message
+                : "Could not reach the server."}
+            </p>
+          </IonText>
+        )}
 
         {!currentGame && (
           <>

@@ -76,7 +76,7 @@ For local testing, `client/.env` should use:
 VITE_API_URL=http://localhost:3000
 ```
 
-Push the Prisma schema to your database:
+Initialize the Prisma client and database schema:
 
 ```bash
 yarn prisma:generate
@@ -85,7 +85,8 @@ yarn db:push
 
 ## Running locally
 
-Start the API and Ionic frontend together from the project root:
+After the database setup above succeeds, start the API and Ionic frontend from
+the project root:
 
 ```bash
 yarn dev
