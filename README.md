@@ -7,11 +7,6 @@
 └── README.md
 ```
 
-## Using this repo
-
-Click **"Use this template"** on GitHub (not Fork). **One** teammate creates
-the repo, then **adds the others as collaborators**. One team = one repo.
-
 ## Prerequisites
 
 - **Node 22+** and **Yarn 4** (via Corepack: `corepack enable`)
