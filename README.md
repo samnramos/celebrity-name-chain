@@ -1,9 +1,4 @@
-# Celebrity Name Chain — Starter
-
-Boilerplate for the **Celebrity Name Chain** full-stack group project
-(CityTech TTP 2026 Summer). See the
-[project spec](https://github.com/jonathan-chin/citytech-ttpr-2026-summer/blob/main/project_specs/celebrity-name-chain.md)
-for the game rules, routes, and requirements.
+# Celebrity Name Chain
 
 ```text
 ├── api/     # Express + Prisma + PostgreSQL game server (TypeScript)
